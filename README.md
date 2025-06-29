@@ -11,6 +11,8 @@ A comprehensive translation tool for **Endless Sky** game files with an intuitiv
 - 📁 **Batch Processing**: Translate multiple files at once
 - 🎨 **Multilingual Interface**: Supports multiple interface languages
 - 🔍 **Smart Filtering**: Filter files by content type and status
+- 🚀 **NEW: Complete Ship & Outfit Detection**: Now detects ALL ships.txt, outfits.txt, weapons.txt, and engines.txt files from ALL factions
+- ⚙️ **Enhanced Equipment Translation**: Translate ship and outfit descriptions from every faction folder
 
 ## 🛠️ Installation & Usage
 
@@ -80,9 +82,19 @@ endless-sky-translator/
 - **Conversations**: NPC interactions
 - **News and events**: Narrative information
 - **Planet descriptions**: Only descriptive text (map planets.txt)
-- **Ship descriptions**: Only visible descriptions in ships.txt
-- **Outfit descriptions**: Only visible descriptions in outfits.txt, engines.txt, weapons.txt
+- **Ship descriptions**: Only visible descriptions in ships.txt from ALL factions
+- **Outfit descriptions**: Only visible descriptions in outfits.txt, engines.txt, weapons.txt from ALL factions
+- **Weapon descriptions**: Weapon details from weapons.txt files in every faction
 - **Main campaigns**: Safe faction storylines
+
+### 🔧 NEW! All Equipment Files Detected:
+Now the translator automatically detects and allows translation of equipment files from every faction:
+- **Ships**: `ships.txt`, `*ships.txt` files in all faction folders
+- **Outfits**: `outfits.txt`, `*outfits.txt` files in all faction folders  
+- **Weapons**: `weapons.txt`, `*weapons.txt` files in all faction folders
+- **Engines**: `engines.txt`, `*engines.txt` files in all faction folders
+
+**Supported factions**: human, hai, korath, wanderer, remnant, pug, quarg, coalition, avgi, bunrodea, drak, gegno, incipias, kahet, rulei, sheragi, successors, vyrmeid, and more!
 
 ### 🚫 What is NOT translated:
 - **Technical names** of ships, outfits, planets, systems
