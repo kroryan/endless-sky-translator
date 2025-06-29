@@ -273,7 +273,7 @@ class EndlessSkyTranslatorFixed:
         return None, None, None, None
 
     def translate_text(self, text):
-        """Traduce un texto usando Google Translate con manejo de errores mejorado"""
+        """Traduce un texto usando Google Translate preservando TODOS los identificadores del juego"""
         try:
             if len(text.strip()) < 2:
                 return text
@@ -282,39 +282,77 @@ class EndlessSkyTranslatorFixed:
             clean_text = text.strip()
             if not clean_text:
                 return text
-                
-            # Preservar elementos especiales
-            # 1. Variables del juego como <planet>, <npc>, etc.
-            variables = re.findall(r'<[^>]+>', clean_text)
-            temp_text = clean_text
             
-            # 2. Preservar guiones bajos al inicio (indicadores de teclas de acceso rápido)
+            # PRESERVAR TODOS LOS ELEMENTOS ESPECIALES DEL JUEGO
+            preservation_map = {}
+            temp_text = clean_text
+            placeholder_counter = 0
+            
+            # 1. Variables del juego como <planet>, <origin>, <destination>, <tons>, etc.
+            game_variables = re.findall(r'<[^>]+>', temp_text)
+            for var in game_variables:
+                placeholder = f"__GAMEVAR_{placeholder_counter}__"
+                preservation_map[placeholder] = var
+                temp_text = temp_text.replace(var, placeholder)
+                placeholder_counter += 1
+            
+            # 2. Números con unidades del juego como "5000 credits", "10 tons", "3 jumps"
+            game_units_pattern = r'\b\d+(?:[.,]\d+)?\s*(?:credits?|tons?|jumps?|days?|units?|MW|GW|kW|km|m)\b'
+            game_units = re.findall(game_units_pattern, temp_text, re.IGNORECASE)
+            for unit in game_units:
+                placeholder = f"__GAMEUNIT_{placeholder_counter}__"
+                preservation_map[placeholder] = unit
+                temp_text = temp_text.replace(unit, placeholder)
+                placeholder_counter += 1
+            
+            # 3. Coordenadas y números técnicos como "150.5 -200.3"
+            coordinates_pattern = r'\b-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\b'
+            coordinates = re.findall(coordinates_pattern, temp_text)
+            for coord in coordinates:
+                placeholder = f"__COORD_{placeholder_counter}__"
+                preservation_map[placeholder] = coord
+                temp_text = temp_text.replace(coord, placeholder)
+                placeholder_counter += 1
+            
+            # 4. Nombres propios entre comillas (naves, outfits, sistemas)
+            quoted_names = re.findall(r'"[A-Z][^"]*"', temp_text)
+            for name in quoted_names:
+                placeholder = f"__QUOTEDNAME_{placeholder_counter}__"
+                preservation_map[placeholder] = name
+                temp_text = temp_text.replace(name, placeholder)
+                placeholder_counter += 1
+            
+            # 5. Preservar guiones bajos al inicio (indicadores de teclas de acceso rápido)
             underscore_prefix = ""
             if temp_text.startswith('_'):
                 underscore_prefix = "_"
-                temp_text = temp_text[1:]  # Remover el guión bajo para traducir
+                temp_text = temp_text[1:]
             
-            # 3. Preservar puntos suspensivos
+            # 6. Preservar puntos suspensivos
             ellipsis_suffix = ""
             if temp_text.endswith('...'):
                 ellipsis_suffix = "..."
-                temp_text = temp_text[:-3]  # Remover ... para traducir
+                temp_text = temp_text[:-3]
             
-            # Reemplazar variables temporalmente
-            for i, var in enumerate(variables):
-                temp_text = temp_text.replace(var, f"GAMEVAR{i}")
+            # 7. Preservar archivos y extensiones
+            file_extensions = re.findall(r'\b\w+\.\w+\b', temp_text)
+            for file_ext in file_extensions:
+                placeholder = f"__FILE_{placeholder_counter}__"
+                preservation_map[placeholder] = file_ext
+                temp_text = temp_text.replace(file_ext, placeholder)
+                placeholder_counter += 1
             
-            # No traducir si es muy corto después de limpiar
-            if len(temp_text.strip()) < 2:
+            # No traducir si queda muy poco texto después de preservar elementos
+            if len(temp_text.strip()) < 3:
                 return text
             
             print(f"    🌍 Traduciendo: '{temp_text[:50]}{'...' if len(temp_text) > 50 else ''}'")
             result = self.translator.translate(temp_text, dest=self.target_lang, src='en')
             translated = result.text
             
-            # Restaurar variables del juego
-            for i, var in enumerate(variables):
-                translated = translated.replace(f"GAMEVAR{i}", var)
+            # RESTAURAR TODOS LOS ELEMENTOS PRESERVADOS
+            for placeholder, original_value in preservation_map.items():
+                translated = translated.replace(placeholder, original_value)
             
             # *** NUEVO: Normalizar el texto para el juego (eliminar tildes) ***
             translated = self.normalize_text_for_game(translated)
