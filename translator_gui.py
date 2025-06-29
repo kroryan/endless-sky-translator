@@ -890,22 +890,124 @@ class CustomTranslatorImproved(EndlessSkyTranslatorFixed):
         print(message)  # También imprimir en consola
     
     def translate_text(self, text):
-        """Sobrescribir para redirigir logs a GUI"""
+        """Traduce un texto usando Google Translate preservando TODOS los identificadores del juego"""
         if not text or len(text.strip()) < 2:
             return text
         
-        temp_text = text.strip()
-        if len(temp_text) < 2:
-            return text
-        
         try:
+            clean_text = text.strip()
+            if not clean_text:
+                return text
+            
+            # PRESERVAR TODOS LOS ELEMENTOS ESPECIALES DEL JUEGO
+            preservation_map = {}
+            temp_text = clean_text
+            placeholder_counter = 0
+            
+            # 1. Variables del juego como <planet>, <origin>, <destination>, <tons>, etc.
+            # IMPORTANTE: Preservar TODAS las etiquetas entre < >
+            game_variables = re.findall(r'<[^>]+>', temp_text)
+            if game_variables:
+                self.log_message(f"    🔒 Preservando {len(game_variables)} etiqueta(s): {game_variables}")
+            for var in game_variables:
+                placeholder = f"__GAMEVAR_{placeholder_counter}__"
+                preservation_map[placeholder] = var
+                temp_text = temp_text.replace(var, placeholder)
+                placeholder_counter += 1
+            
+            # 2. Números con unidades del juego como "5000 credits", "10 tons", "3 jumps"
+            game_units_pattern = r'\b\d+(?:[.,]\d+)?\s*(?:credits?|tons?|jumps?|days?|units?|MW|GW|kW|km|m)\b'
+            game_units = re.findall(game_units_pattern, temp_text, re.IGNORECASE)
+            for unit in game_units:
+                placeholder = f"__GAMEUNIT_{placeholder_counter}__"
+                preservation_map[placeholder] = unit
+                temp_text = temp_text.replace(unit, placeholder)
+                placeholder_counter += 1
+            
+            # 3. Coordenadas y números técnicos como "150.5 -200.3"
+            coordinates_pattern = r'\b-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\b'
+            coordinates = re.findall(coordinates_pattern, temp_text)
+            for coord in coordinates:
+                placeholder = f"__COORD_{placeholder_counter}__"
+                preservation_map[placeholder] = coord
+                temp_text = temp_text.replace(coord, placeholder)
+                placeholder_counter += 1
+            
+            # 4. Nombres propios entre comillas (naves, outfits, sistemas)
+            quoted_names = re.findall(r'"[A-Z][^"]*"', temp_text)
+            for name in quoted_names:
+                placeholder = f"__QUOTEDNAME_{placeholder_counter}__"
+                preservation_map[placeholder] = name
+                temp_text = temp_text.replace(name, placeholder)
+                placeholder_counter += 1
+            
+            # 5. Preservar guiones bajos al inicio (indicadores de teclas de acceso rápido)
+            underscore_prefix = ""
+            if temp_text.startswith('_'):
+                underscore_prefix = "_"
+                temp_text = temp_text[1:]
+            
+            # 6. Preservar puntos suspensivos
+            ellipsis_suffix = ""
+            if temp_text.endswith('...'):
+                ellipsis_suffix = "..."
+                temp_text = temp_text[:-3]
+            
+            # 7. Preservar archivos y extensiones
+            file_extensions = re.findall(r'\b\w+\.\w+\b', temp_text)
+            for file_ext in file_extensions:
+                placeholder = f"__FILE_{placeholder_counter}__"
+                preservation_map[placeholder] = file_ext
+                temp_text = temp_text.replace(file_ext, placeholder)
+                placeholder_counter += 1
+            
+            # No traducir si queda muy poco texto después de preservar elementos
+            if len(temp_text.strip()) < 3:
+                return text
+            
             self.log_message(f"    🌍 Traduciendo: '{temp_text[:50]}{'...' if len(temp_text) > 50 else ''}'")
             time.sleep(0.1)
             
             translated = self.translator.translate(temp_text, dest=self.target_lang)
-            final_text = translated.text if hasattr(translated, 'text') else str(translated)
+            result_text = translated.text if hasattr(translated, 'text') else str(translated)
             
-            final_text = self.normalize_text_for_game(final_text)
+            # RESTAURAR TODOS LOS ELEMENTOS PRESERVADOS
+            tags_restored = 0
+            for placeholder, original_value in preservation_map.items():
+                # Buscar tanto el placeholder original como en minúsculas (Google Translate los convierte)
+                placeholder_lower = placeholder.lower()
+                if placeholder in result_text:
+                    result_text = result_text.replace(placeholder, original_value)
+                    tags_restored += 1
+                elif placeholder_lower in result_text:
+                    result_text = result_text.replace(placeholder_lower, original_value)
+                    tags_restored += 1
+            
+            # Verificación adicional: asegurar que no queden placeholders sin restaurar
+            remaining_placeholders = re.findall(r'__[a-zA-Z]+_\d+__', result_text)
+            if remaining_placeholders:
+                # Intentar restaurar manualmente con búsqueda insensible a mayúsculas
+                for placeholder in remaining_placeholders:
+                    # Buscar placeholder original correspondiente
+                    for orig_placeholder, orig_value in preservation_map.items():
+                        if orig_placeholder.lower() == placeholder.lower():
+                            result_text = result_text.replace(placeholder, orig_value)
+                            tags_restored += 1
+                            break
+            
+            # Mostrar resultado de restauración si hay etiquetas
+            if preservation_map:
+                final_tags = re.findall(r'<[^>]*>', result_text)
+                if final_tags:
+                    self.log_message(f"    ✅ {len(final_tags)} etiqueta(s) preservada(s): {final_tags}")
+                else:
+                    self.log_message(f"    ⚠️ Se perdieron algunas etiquetas durante la traducción")
+            
+            # Normalizar el texto para el juego (eliminar tildes)
+            result_text = self.normalize_text_for_game(result_text)
+            
+            # Restaurar elementos especiales
+            final_text = underscore_prefix + result_text + ellipsis_suffix
             
             self.log_message(f"    ✅ Resultado: '{final_text[:50]}{'...' if len(final_text) > 50 else ''}'")
             return final_text

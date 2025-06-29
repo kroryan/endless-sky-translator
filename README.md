@@ -426,21 +426,63 @@ The `normalize_text_for_game()` function handles accent removal and character no
 - **Garbage collection** between major operations
 - **Error recovery** to continue processing after failures
 
-## 🤝 Contributing
+# Solution to Preserve <> Tags in Translation
 
-Want to improve the translator? Consider:
-- **Adding new language-specific text processing rules**
-- **Improving pattern matching for better content detection**
-- **Adding support for additional file types**
-- **Creating language-specific character handling**
+## Identified Issue
+The translation system was incorrectly translating game tags like `<destination>`, `<planet>`, `<origin>`, etc., changing them for example from:
+- `<destination>` to `<Destino>`
 
-## 📄 License and Credits
+This caused issues because these tags are special game variables that must be preserved exactly as they are.
 
-This translator is provided as-is for the Endless Sky community. Please respect:
-- **Endless Sky's open-source license**
-- **Google Translate's terms of service**
-- **Rate limiting** to avoid overloading translation services
+## Root Cause
+The `translate_text` function in the `translator_gui.py` file lacked the tag preservation logic that was already present in `translator.py`. Additionally, Google Translate converts temporary placeholders to lowercase, which prevented correct restoration.
 
----
+## Implemented Solution
 
-**Happy translating! May your Endless Sky adventures be accessible to players worldwide! 🌟**
+### 1. Identification and Preservation
+- All tags matching the pattern `<[^>]+>` are identified before translation
+- Tags are replaced with unique temporary placeholders (`__GAMEVAR_0__`, `__GAMEVAR_1__`, etc.)
+- The text is translated without the original tags
+
+### 2. Robust Restoration
+- Placeholders are searched for in both their original and lowercase forms
+- Original tags are restored after translation
+- Ensures no placeholders remain unreplaced
+
+### 3. Modified Files
+
+#### `translator.py`
+- Improved `translate_text()` function with lowercase placeholder handling
+- Added manual restoration logic for edge cases
+
+#### `translator_gui.py`
+- Implemented complete `translate_text()` function with tag preservation
+- Added informative logs to show preservation process
+- Synced with the main file logic
+
+## Verification
+Test scripts confirmed that:
+- ✅ `<destination>` is correctly preserved
+- ✅ `<planet>`, `<origin>`, `<tons>`, `<credits>` are preserved
+- ✅ Multiple tags in a single line are preserved
+- ✅ The specific reported issue is resolved
+
+## Usage
+Now when running the translator, tags will be automatically preserved:
+
+```
+
+🌍 Translating: 'Bring Amy and Nolan to <destination>, where they w\...'
+🔒 Preserving 1 tag(s): \['<destination>']
+✅ Result: 'Traiga a Amy y Nolan a <destination>, donde estarán a salvo.'
+
+```
+
+## Types of Preserved Tags
+- Mission variables: `<destination>`, `<origin>`, `<planet>`, `<system>`
+- Resource variables: `<credits>`, `<tons>`, `<cargo>`
+- Ship variables: `<ship>`, `<outfit>`
+- Any tag in the format `<text>`
+
+The solution works for ALL tags enclosed in `<>` regardless of their content.
+```

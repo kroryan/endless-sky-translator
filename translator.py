@@ -289,6 +289,7 @@ class EndlessSkyTranslatorFixed:
             placeholder_counter = 0
             
             # 1. Variables del juego como <planet>, <origin>, <destination>, <tons>, etc.
+            # IMPORTANTE: Preservar TODAS las etiquetas entre < > sin excepción
             game_variables = re.findall(r'<[^>]+>', temp_text)
             for var in game_variables:
                 placeholder = f"__GAMEVAR_{placeholder_counter}__"
@@ -352,7 +353,23 @@ class EndlessSkyTranslatorFixed:
             
             # RESTAURAR TODOS LOS ELEMENTOS PRESERVADOS
             for placeholder, original_value in preservation_map.items():
-                translated = translated.replace(placeholder, original_value)
+                # Buscar tanto el placeholder original como en minúsculas (Google Translate los convierte)
+                placeholder_lower = placeholder.lower()
+                if placeholder in translated:
+                    translated = translated.replace(placeholder, original_value)
+                elif placeholder_lower in translated:
+                    translated = translated.replace(placeholder_lower, original_value)
+            
+            # Verificación adicional: asegurar que no queden placeholders sin restaurar
+            remaining_placeholders = re.findall(r'__[a-zA-Z]+_\d+__', translated)
+            if remaining_placeholders:
+                # Intentar restaurar manualmente con búsqueda insensible a mayúsculas
+                for placeholder in remaining_placeholders:
+                    # Buscar placeholder original correspondiente
+                    for orig_placeholder, orig_value in preservation_map.items():
+                        if orig_placeholder.lower() == placeholder.lower():
+                            translated = translated.replace(placeholder, orig_value)
+                            break
             
             # *** NUEVO: Normalizar el texto para el juego (eliminar tildes) ***
             translated = self.normalize_text_for_game(translated)
