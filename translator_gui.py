@@ -293,8 +293,9 @@ class TranslatorGUIImproved:
             return ("✅", "green", "Completamente seguro")
         
         # Archivos especiales con lógica particular (amarillo)
-        special_files = ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt', 'harvesting.txt', 'variants.txt']
-        if filename_lower in special_files:
+        # INCLUIR todos los archivos que terminen con estos patrones
+        special_patterns = ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt', 'sales.txt', 'harvesting.txt', 'variants.txt']
+        if any(filename_lower.endswith(pattern) for pattern in special_patterns):
             return ("⚙️", "orange", "Solo descripciones")
         
         # Archivos raíz especiales
@@ -328,7 +329,7 @@ class TranslatorGUIImproved:
         
         # Lista específica de archivos que NUNCA deben aparecer
         excluded_files = [
-            'fleets.txt', 'governments.txt', 'systems.txt', 'planets.txt',
+            'systems.txt', 'planets.txt',
             'map systems.txt', 'commodities.txt',
             'effects.txt', 'hazards.txt', 'formations.txt', 'stars.txt', 'series.txt',
             'derelicts.txt', 'minables.txt', 'wormhole.txt',
@@ -336,26 +337,35 @@ class TranslatorGUIImproved:
             'map beyond patir.txt'
         ]
         
+        # NOTA: Removido 'fleets.txt' y 'governments.txt' de la lista de excluidos
+        # porque contienen texto traducible (descripciones de flotas y gobiernos)
+        
         if filename in excluded_files:
             return False
         
         # Patrones que NUNCA deben aparecer (pero no 'variant' porque algunos archivos variant son útiles)
-        excluded_patterns = ['derelict', 'formation', 'hazard', 'fleet', 'government', 'system', 'rating', 'swizzle']
+        excluded_patterns = ['derelict', 'formation', 'hazard', 'system', 'rating', 'swizzle']
         if any(pattern in filename for pattern in excluded_patterns):
             # Excepción: si contiene ship, outfit, weapon, engine, harvesting sí queremos incluirlo
             equipment_exceptions = ['ship', 'outfit', 'weapon', 'engine', 'power', 'harvesting']
             if not any(eq in filename for eq in equipment_exceptions):
                 return False
         
+        # NOTA: Removido 'fleet' y 'government' de excluded_patterns porque 
+        # queremos incluir archivos fleets.txt y governments.txt
+        
         # Archivos que SÍ queremos mostrar (contenido seguro)
-        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign', 'culture', 'intro', 'side', 'start', 'harvesting', 'persons', 'help', 'boarding', 'names', 'phrase']
+        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign', 'culture', 'intro', 'side', 'start', 'harvesting', 'persons', 'help', 'boarding', 'names', 'phrase', 'fleet', 'government']
         if any(pattern in filename for pattern in safe_patterns):
             return True
         
         # Archivos de equipamiento que SÍ queremos (contienen descripciones traducibles)
-        equipment_patterns = ['ship', 'outfit', 'weapon', 'engine', 'power']
+        # IMPORTANTE: Incluir TODOS los archivos que contengan estas palabras
+        equipment_patterns = ['ship', 'outfit', 'weapon', 'engine', 'power', 'sales']
         if any(pattern in filename for pattern in equipment_patterns):
-            return True
+            # Verificar que no sea un archivo excluido por otros motivos
+            if not any(excluded in filename for excluded in ['variant', 'system']):
+                return True
         
         # Archivos raíz permitidos especiales
         root_files = ['map planets.txt', 'dialog phrases.txt', 'starts.txt', 'harvesting.txt', 'persons.txt']
@@ -1134,9 +1144,16 @@ class CustomTranslatorImproved(EndlessSkyTranslatorFixed):
         if filename_lower == 'commodities.txt':
             self.log_message(f"   🎯 Aplicando lógica especial para commodities")
             return self.translate_commodities_file(source_file, dest_file)
-        elif filename_lower in ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt']:
-            self.log_message(f"   🎯 Aplicando lógica especial para ships/outfits/engines")
+        elif filename_lower in ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt'] or \
+             any(filename_lower.endswith(pattern) for pattern in ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt', 'sales.txt']):
+            self.log_message(f"   🎯 Aplicando lógica especial para ships/outfits/engines/sales")
             return self.translate_ships_outfits_file(source_file, dest_file)
+        elif filename_lower == 'fleets.txt' or filename_lower.endswith(' fleets.txt'):
+            self.log_message(f"   🎯 Aplicando lógica especial para fleets")
+            return self.translate_fleets_file(source_file, dest_file)
+        elif filename_lower == 'governments.txt' or filename_lower.endswith(' governments.txt'):
+            self.log_message(f"   🎯 Aplicando lógica especial para governments")
+            return self.translate_governments_file(source_file, dest_file)
         
         # Lógica general para otros archivos
         # Crear directorio de destino
@@ -1324,29 +1341,41 @@ class CustomTranslatorImproved(EndlessSkyTranslatorFixed):
         
         # Lista específica de archivos que NUNCA deben procesarse
         excluded_files = [
-            'fleets.txt', 'governments.txt', 'systems.txt', 'planets.txt',
+            'systems.txt', 'planets.txt',
             'map systems.txt', 'commodities.txt', 'variants.txt', 'persons.txt',
             'effects.txt', 'hazards.txt', 'formations.txt', 'stars.txt', 'series.txt',
             'derelicts.txt', 'minables.txt', 'start.txt', 'wormhole.txt'
         ]
         
+        # NOTA: Removido 'fleets.txt' y 'governments.txt' para permitir su procesamiento
+        
         if filename in excluded_files:
             return False
         
         # Patrones que NUNCA deben procesarse
-        excluded_patterns = ['derelict', 'variant', 'formation', 'hazard', 'fleet', 'government', 'system']
+        excluded_patterns = ['derelict', 'variant', 'formation', 'hazard', 'system']
         if any(pattern in filename for pattern in excluded_patterns):
             return False
         
-        # Archivos que SÍ queremos procesar
-        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign']
+        # NOTA: Removido 'fleet' y 'government' para permitir procesamiento de fleets.txt y governments.txt
+        
+        # Archivos que SÍ queremos procesar (contenido completamente seguro)
+        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign', 'fleet', 'government']
         if any(pattern in filename for pattern in safe_patterns):
             return True
         
-        # Archivos especiales que SÍ queremos (solo con lógica especial)
-        special_files = ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt']
-        if filename in special_files:
+        # IMPORTANTE: Archivos de equipamiento y naves que SÍ queremos procesar
+        # Incluir TODOS los archivos que contengan estas palabras, sin importar el prefijo
+        equipment_patterns = ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt', 'sales.txt']
+        if any(filename.endswith(pattern) for pattern in equipment_patterns):
             return True
+        
+        # También incluir patrones más amplios para asegurar que capturamos todo
+        broader_equipment_patterns = ['ship', 'outfit', 'weapon', 'engine', 'power', 'sales']
+        if any(pattern in filename and filename.endswith('.txt') for pattern in broader_equipment_patterns):
+            # Verificar que no sea un archivo excluido por otros motivos
+            if not any(excluded in filename for excluded in ['variant']):
+                return True
         
         # Si llegamos aquí, probablemente no es seguro procesar el archivo
         return False
@@ -1385,7 +1414,7 @@ class CustomTranslatorImproved(EndlessSkyTranslatorFixed):
             line_stripped = line.strip()
             
             # Detectar inicio de bloque commodity
-            commodity_match = re.match(r'^commodity\s+"([^"]*)"(?:\s+(\d+)\s+(\d+))?', line_stripped)
+            commodity_match = re.match(r'^commodity\s+"([^"]*)"', line_stripped)
             if commodity_match:
                 in_commodity_block = True
                 commodity_name = commodity_match.group(1)
@@ -1408,28 +1437,28 @@ class CustomTranslatorImproved(EndlessSkyTranslatorFixed):
                 # Solo traducir elementos seguros dentro de commodities
                 # Como descripción (pero no nombres ni valores)
                 if line_stripped.startswith('description'):
-                    desc_match = re.match(r'^(\s*description\s+)"(.+)"(.*)$', line.rstrip())
+                    desc_match = re.match(r'^(\s*description\s+`)(.*)`(\s*)$', line.rstrip())
                     if desc_match:
-                        prefix, description_text, suffix = desc_match.groups()
+                        prefix, text_to_translate, suffix = desc_match.groups()
                         self.log_message(f"    🎯 LÍNEA {i+1}: DESCRIPCIÓN COMMODITY - {current_commodity}")
                         try:
-                            translated_text = self.translate_text(description_text)
-                            if translated_text != description_text:
-                                line = f'{prefix}"{translated_text}"{suffix}\n'
+                            translated_text = self.translate_text(text_to_translate)
+                            if translated_text != text_to_translate:
+                                line = f"{prefix}{translated_text}`{suffix}\n"
                                 was_translated = True
                                 lines_translated += 1
-                                self.log_message(f"    ✅ LÍNEA {i+1}: Descripción traducida!")
+                                self.log_message(f"    ✅ LÍNEA {i+1}: Descripción traducida exitosamente!")
+                                self.log_message(f"        Resultado: '{translated_text[:60]}{'...' if len(translated_text) > 60 else ''}'")
+                            
                         except Exception as e:
-                            self.log_message(f"    ❌ LÍNEA {i+1}: Error: {e}")
-                
-                if was_translated:
-                    translated_lines.append(line)
-                else:
-                    translated_lines.append(original_line)
-                    lines_skipped += 1
-            else:
-                translated_lines.append(original_line)
-                lines_skipped += 1
+                            self.log_message(f"    ❌ LÍNEA {i+1}: Error traduciendo descripción: {e}")
+                            # Mantener línea original en caso de error
+                        translated_lines.append(line)
+                    else:
+                        # La regex no coincide, mantener línea original
+                        self.log_message(f"    ❌ LÍNEA {i+1}: DESCRIPCIÓN no coincide con regex")
+            
+            translated_lines.append(line)
         
         # Solo guardar si hay traducciones
         if lines_translated > 0:
@@ -1598,7 +1627,7 @@ class CustomTranslatorImproved(EndlessSkyTranslatorFixed):
                                 translated_line = f'{prefix}"{translated_text}"{suffix}\n'
                                 was_translated = True
                                 item_has_translations = True
-                                lines_translated += 1
+                                lines_translated +=  1
                                 self.log_message(f"    ✅ LÍNEA {i+1}: explicación traducida correctamente")
                         except Exception as e:
                             self.log_message(f"    ❌ LÍNEA {i+1}: Error en explicación: {e}")
@@ -1630,6 +1659,257 @@ class CustomTranslatorImproved(EndlessSkyTranslatorFixed):
             self.log_message(f"   ✅ Archivo ships/outfits guardado SOLO con traducciones: {dest_file}")
         else:
             self.log_message(f"   ⏭️ Sin traducciones encontradas, no se crea archivo")
+        
+        return lines_translated
+
+    def translate_fleets_file(self, source_file, dest_file):
+        """Traduce específicamente archivos fleets.txt con logs a GUI"""
+        self.log_message(f"\n🚁 Procesando archivo de flotas: {source_file.name}")
+        
+        # Crear directorio de destino
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Detectar codificación
+        encoding = self.detect_encoding(source_file)
+        self.log_message(f"   🔤 Codificación: {encoding}")
+        
+        try:
+            with open(source_file, 'r', encoding=encoding, errors='ignore') as f:
+                lines = f.readlines()
+        except:
+            self.log_message(f"   ⚠️ Error con {encoding}, usando UTF-8...")
+            with open(source_file, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+        
+        self.log_message(f"   📊 Total de líneas: {len(lines)}")
+        translated_lines = []
+        lines_translated = 0
+        lines_skipped = 0
+        in_fleet_block = False
+        current_fleet = ""
+        current_indent = 0
+        
+        for i, line in enumerate(lines):
+            if i % 100 == 0 and i > 0:
+                self.log_message(f"   📈 Progreso flotas: {i}/{len(lines)} líneas...")
+            
+            original_line = line
+            line_stripped = line.strip()
+            
+            # Detectar comentarios y líneas vacías
+            if line_stripped.startswith('#') or not line_stripped:
+                translated_lines.append(original_line)
+                continue
+            
+            # Detectar inicio de bloque fleet
+            fleet_match = re.match(r'^fleet\s+"?([^"]*)"?', line_stripped)
+            if fleet_match:
+                in_fleet_block = True
+                current_fleet = fleet_match.group(1)
+                current_indent = len(line) - len(line.lstrip())
+                self.log_message(f"  🚁 LÍNEA {i+1}: Procesando flota: {current_fleet}")
+                translated_lines.append(original_line)  # No traducir nombres de flotas
+                continue
+            
+            # Detectar fin de bloque
+            if in_fleet_block:
+                line_indent = len(line) - len(line.lstrip()) if line.strip() else 0
+                
+                # Si encontramos una nueva definición al mismo nivel, terminar bloque actual
+                if (line_stripped and 
+                    line_indent <= current_indent and 
+                    any(line_stripped.startswith(kw) for kw in ['fleet ', 'government ', 'mission '])):
+                    in_fleet_block = False
+                    self.log_message(f"    📍 LÍNEA {i+1}: Fin de bloque fleet")
+            
+            # Si estamos en un bloque fleet, buscar elementos traducibles
+            if in_fleet_block:
+                was_translated = False
+                
+                # Detectar descripciones de flotas
+                if line_stripped.startswith('description `'):
+                    if line_stripped.endswith('`'):
+                        desc_match = re.match(r'^(\s*)description\s+`(.+)`(.*)$', line.rstrip())
+                        if desc_match:
+                            prefix, text_to_translate, suffix = desc_match.groups()
+                            self.log_message(f"    🎯 LÍNEA {i+1}: DESCRIPCIÓN DE FLOTA")
+                            try:
+                                translated_text = self.translate_text(text_to_translate)
+                                new_line = f'{prefix}description `{translated_text}`{suffix}'
+                                if original_line.endswith('\n'):
+                                    new_line += '\n'
+                                translated_lines.append(new_line)
+                                lines_translated += 1
+                                was_translated = True
+                                self.log_message(f"    ✅ LÍNEA {i+1}: Descripción traducida")
+                            except Exception as e:
+                                self.log_message(f"    ❌ LÍNEA {i+1}: Error: {e}")
+                                translated_lines.append(original_line)
+                                lines_skipped += 1
+                                was_translated = True
+                
+                # Si no se tradujo, mantener línea original
+                if not was_translated:
+                    translated_lines.append(original_line)
+                    lines_skipped += 1
+            else:
+                # Fuera de bloques, usar lógica normal
+                translated_line, was_translated = self.translate_line(line)
+                if was_translated:
+                    lines_translated += 1
+                else:
+                    lines_skipped += 1
+                translated_lines.append(translated_line)
+        
+        # Guardar archivo solo si hay traducciones
+        if lines_translated > 0:
+            self.log_message(f"   💾 Guardando archivo fleets con {lines_translated} líneas traducidas...")
+            with open(dest_file, 'w', encoding='utf-8-sig') as f:
+                f.writelines(translated_lines)
+            self.log_message(f"   ✅ Archivo fleets guardado: {dest_file}")
+        else:
+            self.log_message(f"   ⏭️ Sin traducciones en fleets, archivo omitido")
+        
+        return lines_translated
+
+    def translate_governments_file(self, source_file, dest_file):
+        """Traduce específicamente archivos governments.txt con logs a GUI"""
+        self.log_message(f"\n🏛️ Procesando archivo de gobiernos: {source_file.name}")
+        
+        # Crear directorio de destino
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Detectar codificación
+        encoding = self.detect_encoding(source_file)
+        self.log_message(f"   🔤 Codificación: {encoding}")
+        
+        try:
+            with open(source_file, 'r', encoding=encoding, errors='ignore') as f:
+                lines = f.readlines()
+        except:
+            self.log_message(f"   ⚠️ Error con {encoding}, usando UTF-8...")
+            with open(source_file, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+        
+        self.log_message(f"   📊 Total de líneas: {len(lines)}")
+        translated_lines = []
+        lines_translated = 0
+        lines_skipped = 0
+        in_government_block = False
+        current_government = ""
+        current_indent = 0
+        
+        for i, line in enumerate(lines):
+            if i % 100 == 0 and i > 0:
+                self.log_message(f"   📈 Progreso gobiernos: {i}/{len(lines)} líneas...")
+            
+            original_line = line
+            line_stripped = line.strip()
+            
+            # Detectar comentarios y líneas vacías
+            if line_stripped.startswith('#') or not line_stripped:
+                translated_lines.append(original_line)
+                continue
+            
+            # Detectar inicio de bloque government
+            gov_match = re.match(r'^government\s+"?([^"]*)"?', line_stripped)
+            if gov_match:
+                in_government_block = True
+                current_government = gov_match.group(1)
+                current_indent = len(line) - len(line.lstrip())
+                self.log_message(f"  🏛️ LÍNEA {i+1}: Procesando gobierno: {current_government}")
+                translated_lines.append(original_line)  # No traducir nombres de gobiernos
+                continue
+            
+            # Detectar fin de bloque
+            if in_government_block:
+                line_indent = len(line) - len(line.lstrip()) if line.strip() else 0
+                
+                # Si encontramos una nueva definición al mismo nivel, terminar bloque actual
+                if (line_stripped and 
+                    line_indent <= current_indent and 
+                    any(line_stripped.startswith(kw) for kw in ['government ', 'fleet ', 'mission '])):
+                    in_government_block = False
+                    self.log_message(f"    📍 LÍNEA {i+1}: Fin de bloque government")
+            
+            # Si estamos en un bloque government, buscar elementos traducibles
+            if in_government_block:
+                was_translated = False
+                
+                # Detectar descripciones de gobiernos
+                if line_stripped.startswith('description `'):
+                    if line_stripped.endswith('`'):
+                        desc_match = re.match(r'^(\s*)description\s+`(.+)`(.*)$', line.rstrip())
+                        if desc_match:
+                            prefix, text_to_translate, suffix = desc_match.groups()
+                            self.log_message(f"    🎯 LÍNEA {i+1}: DESCRIPCIÓN DE GOBIERNO")
+                            try:
+                                translated_text = self.translate_text(text_to_translate)
+                                new_line = f'{prefix}description `{translated_text}`{suffix}'
+                                if original_line.endswith('\n'):
+                                    new_line += '\n'
+                                translated_lines.append(new_line)
+                                lines_translated += 1
+                                was_translated = True
+                                self.log_message(f"    ✅ LÍNEA {i+1}: Descripción traducida")
+                            except Exception as e:
+                                self.log_message(f"    ❌ LÍNEA {i+1}: Error: {e}")
+                                translated_lines.append(original_line)
+                                lines_skipped += 1
+                                was_translated = True
+                
+                # Detectar friendly/hostile hails (mensajes de comunicación)
+                hail_patterns = [
+                    (r'^(\s*)(friendly hail\s+)"(.+)"(.*)$', 'friendly hail'),
+                    (r'^(\s*)(hostile hail\s+)"(.+)"(.*)$', 'hostile hail'),
+                    (r'^(\s*)(bribe\s+)"(.+)"(.*)$', 'bribe message'),
+                    (r'^(\s*)(fine\s+)"(.+)"(.*)$', 'fine message')
+                ]
+                
+                if not was_translated:
+                    for pattern, hail_type in hail_patterns:
+                        hail_match = re.match(pattern, line.rstrip())
+                        if hail_match:
+                            prefix, keyword, text_to_translate, suffix = hail_match.groups()
+                            self.log_message(f"    🎯 LÍNEA {i+1}: {hail_type.upper()}")
+                            try:
+                                translated_text = self.translate_text(text_to_translate)
+                                new_line = f'{prefix}{keyword}"{translated_text}"{suffix}'
+                                if original_line.endswith('\n'):
+                                    new_line += '\n'
+                                translated_lines.append(new_line)
+                                lines_translated += 1
+                                was_translated = True
+                                self.log_message(f"    ✅ LÍNEA {i+1}: {hail_type} traducido")
+                                break
+                            except Exception as e:
+                                self.log_message(f"    ❌ LÍNEA {i+1}: Error: {e}")
+                                translated_lines.append(original_line)
+                                lines_skipped += 1
+                                was_translated = True
+                                break
+                
+                # Si no se tradujo, mantener línea original
+                if not was_translated:
+                    translated_lines.append(original_line)
+                    lines_skipped += 1
+            else:
+                # Fuera de bloques, usar lógica normal
+                translated_line, was_translated = self.translate_line(line)
+                if was_translated:
+                    lines_translated += 1
+                else:
+                    lines_skipped += 1
+                translated_lines.append(translated_line)
+        
+        # Guardar archivo solo si hay traducciones
+        if lines_translated > 0:
+            self.log_message(f"   💾 Guardando archivo governments con {lines_translated} líneas traducidas...")
+            with open(dest_file, 'w', encoding='utf-8-sig') as f:
+                f.writelines(translated_lines)
+            self.log_message(f"   ✅ Archivo governments guardado: {dest_file}")
+        else:
+            self.log_message(f"   ⏭️ Sin traducciones en governments, archivo omitido")
         
         return lines_translated
 def main():
