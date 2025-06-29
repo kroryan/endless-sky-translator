@@ -1,13 +1,81 @@
-# Endless Sky Automatic Translator (Advanced GUI Version)
+# 🚀 Endless Sky Translator
 
-This advanced script automatically translates Endless Sky game content from English to Spanish using **intelligent and conservative logic** that preserves game functionality. Now featuring a **powerful GUI with granular file selection**.
+A comprehensive translation tool for **Endless Sky** game files with an intuitive GUI interface. This tool allows you to easily translate game content while maintaining file structure and format integrity.
 
-## 🎯 Conservative Approach
+## ✨ Features
 
-The script uses a **conservative and selective** approach to avoid breaking the game:
+- 🎯 **Smart File Selection**: Automatically detects and lists translatable game files
+- 🖥️ **Intuitive GUI**: User-friendly interface with real checkboxes and filtering
+- 🌍 **Multiple Translation Engines**: Supports Google Translate and DeepL
+- 🔒 **Safe Operation**: Preserves original files and maintains backup copies
+- 📁 **Batch Processing**: Translate multiple files at once
+- 🎨 **Multilingual Interface**: Supports multiple interface languages
+- 🔍 **Smart Filtering**: Filter files by content type and status
 
-### ✅ What IS translated:
-- **User Interface** (`_ui/`): Menus, buttons, labels
+## 🛠️ Installation & Usage
+
+### Option 1: Download Pre-compiled Executable (Recommended)
+1. Go to the [Releases](https://github.com/kroryan/endless-sky-translator/releases) page
+2. Download the latest `Endless_Sky_Translator.exe`
+3. Run the executable directly - no installation required!
+
+### Option 2: Build from Source
+
+#### Prerequisites
+- Python 3.6 or higher
+- pip package manager
+
+#### Quick Build
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/kroryan/endless-sky-translator.git
+   cd endless-sky-translator
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pip install deep-translator googletrans==3.1.0a0 requests chardet pyinstaller pillow
+   ```
+
+3. **Convert icon** (if needed):
+   ```bash
+   python convert_icon.py
+   ```
+
+4. **Build executable**:
+   ```bash
+   pyinstaller --onefile --windowed --name "Endless_Sky_Translator" --add-data "translator.py;." --add-data "translations.py;." --add-data "translator_gui.py;." --hidden-import "tkinter" --hidden-import "tkinter.ttk" --hidden-import "tkinter.filedialog" --hidden-import "tkinter.messagebox" --hidden-import "tkinter.scrolledtext" --hidden-import "googletrans" --hidden-import "deep_translator" --hidden-import "requests" --hidden-import "chardet" --icon="endless_sky_translator.ico" run_gui.py
+   ```
+
+5. **Find your executable** in the `dist/` folder
+
+#### Detailed Build Instructions
+For detailed build instructions, troubleshooting, and advanced options, see [BUILD_GUIDE.md](BUILD_GUIDE.md).
+
+## 🎮 How to Use
+
+1. **Launch** the translator (either the .exe or `python run_gui.py`)
+2. **Select** your Endless Sky installation directory
+3. **Choose** the files you want to translate using the checkboxes
+4. **Select** your target language
+5. **Click** "Start Translation" and wait for completion
+6. **Enjoy** your translated game!
+
+## 📂 Project Structure
+
+```
+endless-sky-translator/
+├── run_gui.py              # Main launcher
+├── translator_gui.py       # GUI interface
+├── translator.py           # Core translation logic
+├── translations.py         # Interface translations
+├── convert_icon.py         # Icon conversion utility
+├── requirements.txt        # Python dependencies
+├── BUILD_GUIDE.md         # Detailed build instructions
+├── endless_sky_translator.ico  # Application icon
+├── icono.webp             # Source icon image
+└── README.md              # This file
+```
 - **Dialogues and missions**: Player-visible text
 - **Conversations**: NPC interactions
 - **News and events**: Narrative information

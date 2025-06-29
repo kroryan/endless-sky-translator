@@ -93,7 +93,34 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
+# Compilación y distribución - ARCHIVOS GENERADOS POR PYINSTALLER
+build/
+dist/
+__pycache__/
+*.spec
+
+# Archivos ejecutables generados
+*.exe
+*.msi
+*.dmg
+*.pkg
+*.deb
+*.rpm
+*.AppImage
+
+# Archivos Python compilados
+*.pyc
+*.pyo
+*.pyd
+
+# Logs y archivos temporales
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Archivos de entorno
 .env
 .venv
 env/
@@ -101,6 +128,33 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# IDE y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos de sistema
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Archivos temporales y de respaldo
+*.tmp
+*.temp
+*~
+
+# Archivos comprimidos
+*.zip
+*.tar.gz
+*.rar
 
 # Spyder project settings
 .spyderproject
@@ -120,54 +174,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Windows
-desktop.ini
-
-# Temporary files
-*.tmp
-*.temp
-*~
-
-# Archives
-*.zip
-*.tar.gz
-*.rar
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Project specific
-# Keep the source ICO file but ignore generated ones
-# endless_sky_translator.ico is needed so DON'T ignore it
-# icono.webp is source so keep it
-
-# Build artifacts to ignore
-*.exe
-*.msi
-*.dmg
-*.pkg
-*.deb
-*.rpm
-*.AppImage
-
-# Logs
-*.log
+# Archivos de configuración específicos del proyecto
 error.txt
 debug.txt
 
-# Temporary translation files
+# MANTENER ESTOS ARCHIVOS (NO IGNORAR):
+# endless_sky_translator.ico - Necesario para la compilación
+# icono.webp - Archivo fuente del ícono
 temp_*
 tmp_*
