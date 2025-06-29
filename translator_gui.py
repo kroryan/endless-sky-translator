@@ -288,18 +288,36 @@ class TranslatorGUIImproved:
         filename_lower = filename.lower()
         
         # Archivos completamente seguros (verde)
-        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign']
+        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign', 'start', 'culture', 'help', 'boarding', 'names', 'phrase']
         if any(pattern in filename_lower for pattern in safe_patterns):
             return ("✅", "green", "Completamente seguro")
         
         # Archivos especiales con lógica particular (amarillo)
-        special_files = ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt']
+        special_files = ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt', 'harvesting.txt', 'variants.txt']
         if filename_lower in special_files:
             return ("⚙️", "orange", "Solo descripciones")
         
         # Archivos raíz especiales
-        if filename_lower in ['map planets.txt', 'dialog phrases.txt']:
+        if filename_lower in ['map planets.txt', 'dialog phrases.txt', 'starts.txt', 'persons.txt']:
             return ("🌟", "blue", "Archivo especial")
+        
+        # Archivos de facciones con frases/nombres (también seguros)
+        if any(faction in filename_lower for faction in ['wanderers.txt', 'hai.txt', 'korath.txt']):
+            return ("👥", "cyan", "Nombres de facción")
+        
+        # Archivos específicos de facciones seguros por patrón
+        safe_faction_patterns = ['prologue', 'epilogue', 'middle', 'checkmate', 'reconciliation', 'reactions', 'side plots', 'war jobs']
+        if any(pattern in filename_lower for pattern in safe_faction_patterns):
+            return ("📖", "green", "Historia/campañas")
+        
+        # Archivos de trabajos por ubicación
+        location_patterns = ['north', 'south', 'earth', 'belt', 'frontier', 'rim', 'paradise', 'syndicate', 'pirate', 'deep']
+        if any(pattern in filename_lower for pattern in location_patterns) and 'job' in filename_lower:
+            return ("💼", "blue", "Trabajos por región")
+        
+        # Archivos de personajes (frases traducibles)
+        if filename_lower == 'persons.txt':
+            return ("👤", "purple", "Frases de personajes")
         
         # Por defecto, revisar
         return ("⚠️", "gray", "Requiere revisión")
@@ -311,10 +329,10 @@ class TranslatorGUIImproved:
         # Lista específica de archivos que NUNCA deben aparecer
         excluded_files = [
             'fleets.txt', 'governments.txt', 'systems.txt', 'planets.txt',
-            'map systems.txt', 'commodities.txt', 'persons.txt',
+            'map systems.txt', 'commodities.txt',
             'effects.txt', 'hazards.txt', 'formations.txt', 'stars.txt', 'series.txt',
-            'derelicts.txt', 'minables.txt', 'start.txt', 'wormhole.txt', 'starts.txt',
-            'globals.txt', 'gamerules.txt', 'harvesting.txt', 'categories.txt',
+            'derelicts.txt', 'minables.txt', 'wormhole.txt',
+            'globals.txt', 'gamerules.txt', 'categories.txt',
             'map beyond patir.txt'
         ]
         
@@ -324,13 +342,13 @@ class TranslatorGUIImproved:
         # Patrones que NUNCA deben aparecer (pero no 'variant' porque algunos archivos variant son útiles)
         excluded_patterns = ['derelict', 'formation', 'hazard', 'fleet', 'government', 'system', 'rating', 'swizzle']
         if any(pattern in filename for pattern in excluded_patterns):
-            # Excepción: si contiene ship, outfit, weapon, engine sí queremos incluirlo
-            equipment_exceptions = ['ship', 'outfit', 'weapon', 'engine', 'power']
+            # Excepción: si contiene ship, outfit, weapon, engine, harvesting sí queremos incluirlo
+            equipment_exceptions = ['ship', 'outfit', 'weapon', 'engine', 'power', 'harvesting']
             if not any(eq in filename for eq in equipment_exceptions):
                 return False
         
         # Archivos que SÍ queremos mostrar (contenido seguro)
-        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign', 'culture', 'intro', 'side']
+        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign', 'culture', 'intro', 'side', 'start', 'harvesting', 'persons', 'help', 'boarding', 'names', 'phrase']
         if any(pattern in filename for pattern in safe_patterns):
             return True
         
@@ -339,8 +357,8 @@ class TranslatorGUIImproved:
         if any(pattern in filename for pattern in equipment_patterns):
             return True
         
-        # Archivos raíz permitidos
-        root_files = ['map planets.txt', 'dialog phrases.txt']
+        # Archivos raíz permitidos especiales
+        root_files = ['map planets.txt', 'dialog phrases.txt', 'starts.txt', 'harvesting.txt', 'persons.txt']
         if filename in root_files:
             return True
         
@@ -349,8 +367,13 @@ class TranslatorGUIImproved:
         if any(pattern in filename for pattern in ui_patterns):
             return True
         
+        # Archivos de trabajos por ubicación geográfica
+        location_patterns = ['north', 'south', 'earth', 'belt', 'frontier', 'rim', 'paradise', 'syndicate', 'pirate', 'deep']
+        if any(pattern in filename for pattern in location_patterns) and 'job' in filename:
+            return True
+        
         # Archivos específicos de facciones que también queremos
-        faction_patterns = ['sales', 'boarding', 'marauder', 'kestrel', 'name', 'critter', 'elenchus', 'nanobots', 'windjammer', 'indigenous', 'archaeology', 'tace mesa']
+        faction_patterns = ['sales', 'boarding', 'marauder', 'kestrel', 'name', 'critter', 'elenchus', 'nanobots', 'windjammer', 'indigenous', 'archaeology', 'tace mesa', 'variant', 'prologue', 'epilogue', 'middle', 'checkmate', 'reconciliation', 'reactions', 'plots', 'reveal', 'war', 'reveal']
         if any(pattern in filename for pattern in faction_patterns):
             return True
         
@@ -360,7 +383,7 @@ class TranslatorGUIImproved:
             return True
         
         # Archivos con nombres de facciones específicas
-        faction_names = ['hai', 'korath', 'wanderer', 'remnant', 'pug', 'quarg', 'coalition', 'avgi', 'bunrodea', 'drak', 'gegno', 'iije', 'incipias', 'kahet', 'rulei', 'sheragi', 'successor', 'vyrmeid', 'aberrant', 'unfettered', 'heliarch', 'lunarium']
+        faction_names = ['hai', 'korath', 'wanderer', 'remnant', 'pug', 'quarg', 'coalition', 'avgi', 'bunrodea', 'drak', 'gegno', 'iije', 'incipias', 'kahet', 'rulei', 'sheragi', 'successor', 'vyrmeid', 'aberrant', 'unfettered', 'heliarch', 'lunarium', 'wanderers']
         if any(faction in filename for faction in faction_names):
             return True
         

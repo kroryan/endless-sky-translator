@@ -190,8 +190,24 @@ docker build -t endless-sky-translator-appimage -f ./Dockerfile.appimage .
 docker build -t endless-sky-translator-appimage -f ./Dockerfile.appimage .
 ```
 
-#### 4. Extract the AppImage
+#### 4. Extract the AppImage Automatically
+```powershell
+# Windows (PowerShell) - Create dist folder if it doesn't exist
+if (-not (Test-Path "dist")) { New-Item -ItemType Directory -Path "dist" }
+
+# Create a temporary container and copy the AppImage
+docker create --name temp-container endless-sky-translator-appimage
+docker cp temp-container:/app/dist/Endless_Sky_Translator-x86_64.AppImage ./dist/
+docker rm temp-container
+
+# Verify the AppImage was copied
+Get-ChildItem "dist/Endless_Sky_Translator-x86_64.AppImage"
+```
+
 ```bash
+# Linux/macOS (Terminal) - Create dist folder if it doesn't exist
+mkdir -p dist
+
 # Create a temporary container and copy the AppImage
 docker create --name temp-container endless-sky-translator-appimage
 docker cp temp-container:/app/dist/Endless_Sky_Translator-x86_64.AppImage ./dist/
@@ -368,6 +384,19 @@ chmod +x build_appimage_linux.sh
 git clone https://github.com/kroryan/endless-sky-translator.git
 cd endless-sky-translator
 docker build -t endless-sky-translator-appimage -f ./Dockerfile.appimage .
+```
+
+#### Windows (PowerShell):
+```powershell
+if (-not (Test-Path "dist")) { New-Item -ItemType Directory -Path "dist" }
+docker create --name temp-container endless-sky-translator-appimage
+docker cp temp-container:/app/dist/Endless_Sky_Translator-x86_64.AppImage ./dist/
+docker rm temp-container
+```
+
+#### Linux/macOS (Terminal):
+```bash
+mkdir -p dist
 docker create --name temp-container endless-sky-translator-appimage
 docker cp temp-container:/app/dist/Endless_Sky_Translator-x86_64.AppImage ./dist/
 docker rm temp-container

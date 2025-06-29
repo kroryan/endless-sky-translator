@@ -596,9 +596,30 @@ class EndlessSkyTranslatorFixed:
         if filename_lower == 'commodities.txt':
             print(f"   🎯 Aplicando lógica especial para commodities")
             return self.translate_commodities_file(source_file, dest_file)
-        elif filename_lower in ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt']:
-            print(f"   🎯 Aplicando lógica especial para ships/outfits/engines")
+        elif filename_lower in ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt', 'harvesting.txt', 'variants.txt']:
+            print(f"   🎯 Aplicando lógica especial para ships/outfits/engines/harvesting/variants")
             return self.translate_ships_outfits_file(source_file, dest_file)
+        elif filename_lower == 'starts.txt':
+            print(f"   🎯 Aplicando lógica especial para starts")
+            return self.translate_starts_file(source_file, dest_file)
+        elif filename_lower == 'persons.txt':
+            print(f"   🎯 Aplicando lógica especial para persons")
+            return self.translate_persons_file(source_file, dest_file)
+        elif filename_lower == 'help.txt':
+            print(f"   🎯 Aplicando lógica especial para help")
+            return self.translate_help_file(source_file, dest_file)
+        elif 'hails.txt' in filename_lower or 'names.txt' in filename_lower or filename_lower in ['wanderers.txt', 'hai.txt', 'korath.txt']:
+            print(f"   🎯 Aplicando lógica especial para hails/names/facciones")
+            return self.translate_hails_file(source_file, dest_file)
+        elif 'news.txt' in filename_lower:
+            print(f"   🎯 Aplicando lógica especial para news")
+            return self.translate_news_file(source_file, dest_file)
+        elif filename_lower == 'starts.txt':
+            print(f"   🎯 Aplicando lógica especial para starts")
+            return self.translate_starts_file(source_file, dest_file)
+        elif filename_lower == 'persons.txt':
+            print(f"   🎯 Aplicando lógica especial para persons")
+            return self.translate_persons_file(source_file, dest_file)
         
         # Lógica general para otros archivos
         # Crear directorio de destino
@@ -1199,8 +1220,8 @@ Este plugin proporciona traducción automática al español para Endless Sky.
             original_line = line
             line_stripped = line.strip()
             
-            # Detectar inicio de bloque de nave, outfit o effect
-            item_match = re.match(r'^(ship|outfit|effect)\s+"?([^"]*)"?', line_stripped)
+            # Detectar inicio de bloque de nave, outfit, effect o minable
+            item_match = re.match(r'^(ship|outfit|effect|minable)\s+"?([^"]*)"?', line_stripped)
             if item_match:
                 in_item_block = True
                 item_type, item_name = item_match.groups()
@@ -1217,7 +1238,7 @@ Este plugin proporciona traducción automática al español para Endless Sky.
                 # Si encontramos una nueva definición al mismo nivel, terminar bloque actual
                 if (line_stripped and 
                     line_indent <= current_indent and 
-                    any(line_stripped.startswith(kw) for kw in ['ship ', 'outfit ', 'effect ', 'planet ', 'system '])):
+                    any(line_stripped.startswith(kw) for kw in ['ship ', 'outfit ', 'effect ', 'minable ', 'planet ', 'system '])):
                     in_item_block = False
                     print(f"    📍 LÍNEA {i+1}: Fin de bloque - nueva definición")
                 # Si es línea vacía o comentario, mantener pero no cambiar estado del bloque
@@ -1302,6 +1323,608 @@ Este plugin proporciona traducción automática al español para Endless Sky.
             print(f"   ✅ Archivo de naves/outfits guardado: {dest_file}")
         else:
             print(f"   ⏭️  Sin traducciones en naves/outfits, archivo omitido")
+        
+        print(f"   📊 Resultado: {lines_translated} traducidas, {lines_skipped} omitidas")
+        return lines_translated
+
+    def translate_starts_file(self, source_file, dest_file):
+        """Traduce específicamente el archivo starts.txt"""
+        print(f"\n🚀 Procesando archivo starts: {source_file.name}")
+        
+        # Crear directorio de destino
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Detectar codificación
+        encoding = self.detect_encoding(source_file)
+        print(f"   🔤 Codificación: {encoding}")
+        
+        try:
+            with open(source_file, 'r', encoding=encoding, errors='ignore') as f:
+                lines = f.readlines()
+        except:
+            print(f"   ⚠️ Error con {encoding}, usando UTF-8...")
+            with open(source_file, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+        
+        print(f"   📊 Total de líneas: {len(lines)}")
+        translated_lines = []
+        lines_translated = 0
+        lines_skipped = 0
+        in_start_block = False
+        current_start = ""
+        current_indent = 0
+        
+        for i, line in enumerate(lines):
+            if i % 100 == 0 and i > 0:
+                print(f"   📈 Progreso starts: {i}/{len(lines)} líneas...")
+            
+            original_line = line
+            line_stripped = line.strip()
+            
+            # Detectar comentarios y líneas vacías
+            if line_stripped.startswith('#') or not line_stripped:
+                translated_lines.append(original_line)
+                continue
+            
+            # Detectar inicio de bloque start
+            start_match = re.match(r'^start\s+"?([^"]*)"?', line_stripped)
+            if start_match:
+                in_start_block = True
+                current_start = start_match.group(1)
+                current_indent = len(line) - len(line.lstrip())
+                print(f"  🚀 LÍNEA {i+1}: Procesando start: {current_start}")
+                translated_lines.append(original_line)  # No traducir nombres técnicos
+                continue
+            
+            # Detectar fin de bloque
+            if in_start_block:
+                line_indent = len(line) - len(line.lstrip()) if line.strip() else 0
+                
+                # Si encontramos una nueva definición al mismo nivel, terminar bloque actual
+                if (line_stripped and 
+                    line_indent <= current_indent and 
+                    any(line_stripped.startswith(kw) for kw in ['start ', 'mission ', 'conversation ', 'event '])):
+                    in_start_block = False
+                    print(f"    📍 LÍNEA {i+1}: Fin de bloque start - nueva definición")
+            
+            # Si estamos en un bloque start, buscar elementos traducibles
+            if in_start_block:
+                was_translated = False
+                
+                # Detectar name
+                name_match = re.match(r'^(\s*)(name\s+)"(.+)"(.*)$', line.rstrip())
+                if name_match:
+                    prefix, keyword, name_text, suffix = name_match.groups()
+                    print(f"    🎯 LÍNEA {i+1}: NAME DETECTADO en {current_start}")
+                    try:
+                        translated_text = self.translate_text(name_text)
+                        new_line = f'{prefix}{keyword}"{translated_text}"{suffix}'
+                        if original_line.endswith('\n'):
+                            new_line += '\n'
+                        translated_lines.append(new_line)
+                        lines_translated += 1
+                        was_translated = True
+                        print(f"    ✅ LÍNEA {i+1}: Nombre traducido correctamente")
+                    except Exception as e:
+                        print(f"    ❌ LÍNEA {i+1}: Error traduciendo nombre: {e}")
+                        translated_lines.append(original_line)
+                        lines_skipped += 1
+                        was_translated = True
+                
+                # Detectar description
+                if not was_translated:
+                    description_match = re.match(r'^(\s*)(description\s+)"(.+)"(.*)$', line.rstrip())
+                    if description_match:
+                        prefix, keyword, description_text, suffix = description_match.groups()
+                        print(f"    🎯 LÍNEA {i+1}: DESCRIPTION DETECTADA en {current_start}")
+                        try:
+                            translated_text = self.translate_text(description_text)
+                            new_line = f'{prefix}{keyword}"{translated_text}"{suffix}'
+                            if original_line.endswith('\n'):
+                                new_line += '\n'
+                            translated_lines.append(new_line)
+                            lines_translated += 1
+                            was_translated = True
+                            print(f"    ✅ LÍNEA {i+1}: Descripción traducida correctamente")
+                        except Exception as e:
+                            print(f"    ❌ LÍNEA {i+1}: Error traduciendo descripción: {e}")
+                            translated_lines.append(original_line)
+                            lines_skipped += 1
+                            was_translated = True
+                
+                # Si no se tradujo, mantener línea original
+                if not was_translated:
+                    translated_lines.append(original_line)
+                    lines_skipped += 1
+            else:
+                # Fuera de bloques, usar lógica normal
+                translated_line, was_translated = self.translate_line(line)
+                if was_translated:
+                    lines_translated += 1
+                else:
+                    lines_skipped += 1
+                translated_lines.append(translated_line)
+        
+        # Guardar archivo solo si hay traducciones
+        if lines_translated > 0:
+            print(f"   💾 Guardando archivo starts con {lines_translated} líneas traducidas...")
+            with open(dest_file, 'w', encoding='utf-8-sig') as f:
+                f.writelines(translated_lines)
+            print(f"   ✅ Archivo starts guardado: {dest_file}")
+        else:
+            print(f"   ⏭️  Sin traducciones en starts, archivo omitido")
+        
+        print(f"   📊 Resultado: {lines_translated} traducidas, {lines_skipped} omitidas")
+        return lines_translated
+
+    def translate_persons_file(self, source_file, dest_file):
+        """Traduce específicamente el archivo persons.txt"""
+        print(f"\n👤 Procesando archivo persons: {source_file.name}")
+        
+        # Crear directorio de destino
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Detectar codificación
+        encoding = self.detect_encoding(source_file)
+        print(f"   🔤 Codificación: {encoding}")
+        
+        try:
+            with open(source_file, 'r', encoding=encoding, errors='ignore') as f:
+                lines = f.readlines()
+        except:
+            print(f"   ⚠️ Error con {encoding}, usando UTF-8...")
+            with open(source_file, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+        
+        print(f"   📊 Total de líneas: {len(lines)}")
+        translated_lines = []
+        lines_translated = 0
+        lines_skipped = 0
+        in_phrase_block = False
+        current_phrase = ""
+        current_indent = 0
+        
+        for i, line in enumerate(lines):
+            if i % 100 == 0 and i > 0:
+                print(f"   📈 Progreso persons: {i}/{len(lines)} líneas...")
+            
+            original_line = line
+            line_stripped = line.strip()
+            
+            # Detectar comentarios y líneas vacías
+            if line_stripped.startswith('#') or not line_stripped:
+                translated_lines.append(original_line)
+                continue
+            
+            # Detectar inicio de bloque phrase
+            phrase_match = re.match(r'^phrase\s+"?([^"]*)"?', line_stripped)
+            if phrase_match:
+                in_phrase_block = True
+                current_phrase = phrase_match.group(1)
+                current_indent = len(line) - len(line.lstrip())
+                print(f"  👤 LÍNEA {i+1}: Procesando phrase: {current_phrase}")
+                translated_lines.append(original_line)  # No traducir nombres técnicos
+                continue
+            
+            # Detectar fin de bloque
+            if in_phrase_block:
+                line_indent = len(line) - len(line.lstrip()) if line.strip() else 0
+                
+                # Si encontramos una nueva definición al mismo nivel, terminar bloque actual
+                if (line_stripped and 
+                    line_indent <= current_indent and 
+                    any(line_stripped.startswith(kw) for kw in ['phrase ', 'person '])):
+                    in_phrase_block = False
+                    print(f"    📍 LÍNEA {i+1}: Fin de bloque phrase - nueva definición")
+            
+            # Si estamos en un bloque phrase, buscar elementos traducibles
+            if in_phrase_block:
+                was_translated = False
+                
+                # Detectar word (traducir contenido entre comillas)
+                word_match = re.match(r'^(\s*)"(.+)"(.*)$', line.rstrip())
+                if word_match:
+                    prefix, word_text, suffix = word_match.groups()
+                    print(f"    🎯 LÍNEA {i+1}: WORD DETECTADO en {current_phrase}")
+                    try:
+                        translated_text = self.translate_text(word_text)
+                        new_line = f'{prefix}"{translated_text}"{suffix}'
+                        if original_line.endswith('\n'):
+                            new_line += '\n'
+                        translated_lines.append(new_line)
+                        lines_translated += 1
+                        was_translated = True
+                        print(f"    ✅ LÍNEA {i+1}: Word traducido correctamente")
+                    except Exception as e:
+                        print(f"    ❌ LÍNEA {i+1}: Error traduciendo word: {e}")
+                        translated_lines.append(original_line)
+                        lines_skipped += 1
+                        was_translated = True
+                
+                # Si no se tradujo, mantener línea original
+                if not was_translated:
+                    translated_lines.append(original_line)
+                    lines_skipped += 1
+            else:
+                # Fuera de bloques, usar lógica normal
+                translated_line, was_translated = self.translate_line(line)
+                if was_translated:
+                    lines_translated += 1
+                else:
+                    lines_skipped += 1
+                translated_lines.append(translated_line)
+        
+        # Guardar archivo solo si hay traducciones
+        if lines_translated > 0:
+            print(f"   💾 Guardando archivo persons con {lines_translated} líneas traducidas...")
+            with open(dest_file, 'w', encoding='utf-8-sig') as f:
+                f.writelines(translated_lines)
+            print(f"   ✅ Archivo persons guardado: {dest_file}")
+        else:
+            print(f"   ⏭️  Sin traducciones en persons, archivo omitido")
+        
+        print(f"   📊 Resultado: {lines_translated} traducidas, {lines_skipped} omitidas")
+        return lines_translated
+
+    def translate_help_file(self, source_file, dest_file):
+        """Traduce específicamente el archivo help.txt"""
+        print(f"\n❓ Procesando archivo help: {source_file.name}")
+        
+        # Crear directorio de destino
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Detectar codificación
+        encoding = self.detect_encoding(source_file)
+        print(f"   🔤 Codificación: {encoding}")
+        
+        try:
+            with open(source_file, 'r', encoding=encoding, errors='ignore') as f:
+                lines = f.readlines()
+        except:
+            print(f"   ⚠️ Error con {encoding}, usando UTF-8...")
+            with open(source_file, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+        
+        print(f"   📊 Total de líneas: {len(lines)}")
+        translated_lines = []
+        lines_translated = 0
+        lines_skipped = 0
+        in_help_block = False
+        current_help = ""
+        current_indent = 0
+        
+        for i, line in enumerate(lines):
+            if i % 50 == 0 and i > 0:
+                print(f"   📈 Progreso help: {i}/{len(lines)} líneas...")
+            
+            original_line = line
+            line_stripped = line.strip()
+            
+            # Detectar comentarios y líneas vacías
+            if line_stripped.startswith('#') or not line_stripped:
+                translated_lines.append(original_line)
+                continue
+            
+            # Detectar inicio de bloque help
+            help_match = re.match(r'^help\s+"?([^"]*)"?', line_stripped)
+            if help_match:
+                in_help_block = True
+                current_help = help_match.group(1)
+                current_indent = len(line) - len(line.lstrip())
+                print(f"  ❓ LÍNEA {i+1}: Procesando help: {current_help}")
+                translated_lines.append(original_line)  # No traducir nombres técnicos
+                continue
+            
+            # Detectar fin de bloque
+            if in_help_block:
+                line_indent = len(line) - len(line.lstrip()) if line.strip() else 0
+                
+                # Si encontramos una nueva definición al mismo nivel, terminar bloque actual
+                if (line_stripped and 
+                    line_indent <= current_indent and 
+                    any(line_stripped.startswith(kw) for kw in ['help '])):
+                    in_help_block = False
+                    print(f"    📍 LÍNEA {i+1}: Fin de bloque help - nueva definición")
+            
+            # Si estamos en un bloque help, traducir texto entre backticks
+            if in_help_block:
+                was_translated = False
+                
+                # Detectar texto de ayuda (entre backticks)
+                help_text_match = re.match(r'^(\s*)`(.+)`(.*)$', line.rstrip())
+                if help_text_match:
+                    prefix, help_text, suffix = help_text_match.groups()
+                    print(f"    🎯 LÍNEA {i+1}: HELP TEXT DETECTADO en {current_help}")
+                    try:
+                        translated_text = self.translate_text(help_text)
+                        new_line = f'{prefix}`{translated_text}`{suffix}'
+                        if original_line.endswith('\n'):
+                            new_line += '\n'
+                        translated_lines.append(new_line)
+                        lines_translated += 1
+                        was_translated = True
+                        print(f"    ✅ LÍNEA {i+1}: Texto de ayuda traducido correctamente")
+                    except Exception as e:
+                        print(f"    ❌ LÍNEA {i+1}: Error traduciendo texto de ayuda: {e}")
+                        translated_lines.append(original_line)
+                        lines_skipped += 1
+                        was_translated = True
+                
+                # Si no se tradujo, mantener línea original
+                if not was_translated:
+                    translated_lines.append(original_line)
+                    lines_skipped += 1
+            else:
+                # Fuera de bloques, usar lógica normal
+                translated_line, was_translated = self.translate_line(line)
+                if was_translated:
+                    lines_translated += 1
+                else:
+                    lines_skipped += 1
+                translated_lines.append(translated_line)
+        
+        # Guardar archivo solo si hay traducciones
+        if lines_translated > 0:
+            print(f"   💾 Guardando archivo help con {lines_translated} líneas traducidas...")
+            with open(dest_file, 'w', encoding='utf-8-sig') as f:
+                f.writelines(translated_lines)
+            print(f"   ✅ Archivo help guardado: {dest_file}")
+        else:
+            print(f"   ⏭️  Sin traducciones en help, archivo omitido")
+        
+        print(f"   📊 Resultado: {lines_translated} traducidas, {lines_skipped} omitidas")
+        return lines_translated
+
+    def translate_hails_file(self, source_file, dest_file):
+        """Traduce específicamente archivos hails.txt"""
+        print(f"\n📡 Procesando archivo hails: {source_file.name}")
+        
+        # Crear directorio de destino
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Detectar codificación
+        encoding = self.detect_encoding(source_file)
+        print(f"   🔤 Codificación: {encoding}")
+        
+        try:
+            with open(source_file, 'r', encoding=encoding, errors='ignore') as f:
+                lines = f.readlines()
+        except:
+            print(f"   ⚠️ Error con {encoding}, usando UTF-8...")
+            with open(source_file, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+        
+        print(f"   📊 Total de líneas: {len(lines)}")
+        translated_lines = []
+        lines_translated = 0
+        lines_skipped = 0
+        in_phrase_block = False
+        current_phrase = ""
+        current_indent = 0
+        
+        for i, line in enumerate(lines):
+            if i % 200 == 0 and i > 0:
+                print(f"   📈 Progreso hails: {i}/{len(lines)} líneas...")
+            
+            original_line = line
+            line_stripped = line.strip()
+            
+            # Detectar comentarios y líneas vacías
+            if line_stripped.startswith('#') or not line_stripped:
+                translated_lines.append(original_line)
+                continue
+            
+            # Detectar inicio de bloque phrase
+            phrase_match = re.match(r'^phrase\s+"?([^"]*)"?', line_stripped)
+            if phrase_match:
+                in_phrase_block = True
+                current_phrase = phrase_match.group(1)
+                current_indent = len(line) - len(line.lstrip())
+                print(f"  📡 LÍNEA {i+1}: Procesando phrase: {current_phrase}")
+                translated_lines.append(original_line)  # No traducir nombres técnicos
+                continue
+            
+            # Detectar fin de bloque
+            if in_phrase_block:
+                line_indent = len(line) - len(line.lstrip()) if line.strip() else 0
+                
+                # Si encontramos una nueva definición al mismo nivel, terminar bloque actual
+                if (line_stripped and 
+                    line_indent <= current_indent and 
+                    any(line_stripped.startswith(kw) for kw in ['phrase '])):
+                    in_phrase_block = False
+                    print(f"    📍 LÍNEA {i+1}: Fin de bloque phrase - nueva definición")
+            
+            # Si estamos en un bloque phrase, buscar elementos traducibles
+            if in_phrase_block:
+                was_translated = False
+                
+                # Detectar word (traducir contenido entre comillas)
+                word_match = re.match(r'^(\s*)"(.+)"(.*)$', line.rstrip())
+                if word_match:
+                    prefix, word_text, suffix = word_match.groups()
+                    # Solo traducir si no parece ser un nombre propio o técnico
+                    if not re.match(r'^[A-Z][a-z]+ [A-Z][a-z]+', word_text):  # Skip names like "John Smith"
+                        print(f"    🎯 LÍNEA {i+1}: WORD DETECTADO en {current_phrase}")
+                        try:
+                            translated_text = self.translate_text(word_text)
+                            new_line = f'{prefix}"{translated_text}"{suffix}'
+                            if original_line.endswith('\n'):
+                                new_line += '\n'
+                            translated_lines.append(new_line)
+                            lines_translated += 1
+                            was_translated = True
+                            print(f"    ✅ LÍNEA {i+1}: Word traducido correctamente")
+                        except Exception as e:
+                            print(f"    ❌ LÍNEA {i+1}: Error traduciendo word: {e}")
+                            translated_lines.append(original_line)
+                            lines_skipped += 1
+                            was_translated = True
+                    else:
+                        # Es probablemente un nombre propio, no traducir
+                        translated_lines.append(original_line)
+                        lines_skipped += 1
+                        was_translated = True
+                
+                # Si no se tradujo, mantener línea original
+                if not was_translated:
+                    translated_lines.append(original_line)
+                    lines_skipped += 1
+            else:
+                # Fuera de bloques, usar lógica normal
+                translated_line, was_translated = self.translate_line(line)
+                if was_translated:
+                    lines_translated += 1
+                else:
+                    lines_skipped += 1
+                translated_lines.append(translated_line)
+        
+        # Guardar archivo solo si hay traducciones
+        if lines_translated > 0:
+            print(f"   💾 Guardando archivo hails con {lines_translated} líneas traducidas...")
+            with open(dest_file, 'w', encoding='utf-8-sig') as f:
+                f.writelines(translated_lines)
+            print(f"   ✅ Archivo hails guardado: {dest_file}")
+        else:
+            print(f"   ⏭️  Sin traducciones en hails, archivo omitido")
+        
+        print(f"   📊 Resultado: {lines_translated} traducidas, {lines_skipped} omitidas")
+        return lines_translated
+
+    def translate_news_file(self, source_file, dest_file):
+        """Traduce específicamente archivos news.txt"""
+        print(f"\n📰 Procesando archivo news: {source_file.name}")
+        
+        # Crear directorio de destino
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Detectar codificación
+        encoding = self.detect_encoding(source_file)
+        print(f"   🔤 Codificación: {encoding}")
+        
+        try:
+            with open(source_file, 'r', encoding=encoding, errors='ignore') as f:
+                lines = f.readlines()
+        except:
+            print(f"   ⚠️ Error con {encoding}, usando UTF-8...")
+            with open(source_file, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+        
+        print(f"   📊 Total de líneas: {len(lines)}")
+        translated_lines = []
+        lines_translated = 0
+        lines_skipped = 0
+        in_block = False
+        current_block = ""
+        current_indent = 0
+        
+        for i, line in enumerate(lines):
+            if i % 200 == 0 and i > 0:
+                print(f"   📈 Progreso news: {i}/{len(lines)} líneas...")
+            
+            original_line = line
+            line_stripped = line.strip()
+            
+            # Detectar comentarios y líneas vacías
+            if line_stripped.startswith('#') or not line_stripped:
+                translated_lines.append(original_line)
+                continue
+            
+            # Detectar inicio de bloques phrase, news, mission
+            block_match = re.match(r'^(phrase|news|mission)\s+"?([^"]*)"?', line_stripped)
+            if block_match:
+                in_block = True
+                block_type, block_name = block_match.groups()
+                current_block = f"{block_type} {block_name}"
+                current_indent = len(line) - len(line.lstrip())
+                print(f"  📰 LÍNEA {i+1}: Procesando {block_type}: {block_name}")
+                translated_lines.append(original_line)  # No traducir nombres técnicos
+                continue
+            
+            # Detectar fin de bloque
+            if in_block:
+                line_indent = len(line) - len(line.lstrip()) if line.strip() else 0
+                
+                # Si encontramos una nueva definición al mismo nivel, terminar bloque actual
+                if (line_stripped and 
+                    line_indent <= current_indent and 
+                    any(line_stripped.startswith(kw) for kw in ['phrase ', 'news ', 'mission '])):
+                    in_block = False
+                    print(f"    📍 LÍNEA {i+1}: Fin de bloque - nueva definición")
+            
+            # Si estamos en un bloque, buscar elementos traducibles
+            if in_block:
+                was_translated = False
+                
+                # Detectar message (noticias)
+                message_match = re.match(r'^(\s*)(message\s+)"(.+)"(.*)$', line.rstrip())
+                if message_match:
+                    prefix, keyword, message_text, suffix = message_match.groups()
+                    print(f"    🎯 LÍNEA {i+1}: MESSAGE DETECTADO en {current_block}")
+                    try:
+                        translated_text = self.translate_text(message_text)
+                        new_line = f'{prefix}{keyword}"{translated_text}"{suffix}'
+                        if original_line.endswith('\n'):
+                            new_line += '\n'
+                        translated_lines.append(new_line)
+                        lines_translated += 1
+                        was_translated = True
+                        print(f"    ✅ LÍNEA {i+1}: Message traducido correctamente")
+                    except Exception as e:
+                        print(f"    ❌ LÍNEA {i+1}: Error traduciendo message: {e}")
+                        translated_lines.append(original_line)
+                        lines_skipped += 1
+                        was_translated = True
+                
+                # Detectar word (frases)
+                if not was_translated:
+                    word_match = re.match(r'^(\s*)"(.+)"(.*)$', line.rstrip())
+                    if word_match:
+                        prefix, word_text, suffix = word_match.groups()
+                        # Solo traducir si parece ser contenido de mensaje, no nombres
+                        if len(word_text.split()) > 1:  # Frases de más de una palabra
+                            print(f"    🎯 LÍNEA {i+1}: WORD DETECTADO en {current_block}")
+                            try:
+                                translated_text = self.translate_text(word_text)
+                                new_line = f'{prefix}"{translated_text}"{suffix}'
+                                if original_line.endswith('\n'):
+                                    new_line += '\n'
+                                translated_lines.append(new_line)
+                                lines_translated += 1
+                                was_translated = True
+                                print(f"    ✅ LÍNEA {i+1}: Word traducido correctamente")
+                            except Exception as e:
+                                print(f"    ❌ LÍNEA {i+1}: Error traduciendo word: {e}")
+                                translated_lines.append(original_line)
+                                lines_skipped += 1
+                                was_translated = True
+                        else:
+                            # Probablemente un nombre, no traducir
+                            translated_lines.append(original_line)
+                            lines_skipped += 1
+                            was_translated = True
+                
+                # Si no se tradujo, mantener línea original
+                if not was_translated:
+                    translated_lines.append(original_line)
+                    lines_skipped += 1
+            else:
+                # Fuera de bloques, usar lógica normal
+                translated_line, was_translated = self.translate_line(line)
+                if was_translated:
+                    lines_translated += 1
+                else:
+                    lines_skipped += 1
+                translated_lines.append(translated_line)
+        
+        # Guardar archivo solo si hay traducciones
+        if lines_translated > 0:
+            print(f"   💾 Guardando archivo news con {lines_translated} líneas traducidas...")
+            with open(dest_file, 'w', encoding='utf-8-sig') as f:
+                f.writelines(translated_lines)
+            print(f"   ✅ Archivo news guardado: {dest_file}")
+        else:
+            print(f"   ⏭️  Sin traducciones en news, archivo omitido")
         
         print(f"   📊 Resultado: {lines_translated} traducidas, {lines_skipped} omitidas")
         return lines_translated
