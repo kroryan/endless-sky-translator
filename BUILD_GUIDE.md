@@ -1,303 +1,400 @@
-# 🏗️ Executable Build Guide
+# 🏗️ Build Guide - Endless Sky Translator
 
-This document explains how to compile the **Endless Sky Translator** into an executable file (.exe for Windows, AppImage for Linux).
+This comprehensive guide explains how to compile the **Endless Sky Translator** into executable files for different platforms:
+- **Windows**: `.exe` executable
+- **Linux**: `.AppImage` portable application
 
 ## 📋 Prerequisites
 
-### For Windows (.exe)
-- **Python 3.6 or higher** installed (tested with Python 3.11.9)
-- **pip** working correctly
-- **Internet** to download dependencies
+### Common Requirements
+- **Python 3.6 or higher** (tested with Python 3.11.9)
+- **Git** (for cloning the repository)
+- **Internet connection** (for downloading dependencies)
 
-### For Linux (AppImage)
-- **Python 3.6 or higher**
-- **pip3** installed
-- **wget** to download tools
-- **ImageMagick** (optional, for creating icons)
+### Platform-Specific Requirements
 
-## 🚀 Build Methods
+#### Windows (.exe)
+- **Python 3.6+** with pip
+- **PowerShell** or **Command Prompt**
+- **Docker Desktop** (optional, for cross-compilation)
 
-### Method 1: Clean Direct Build (RECOMMENDED)
+#### Linux (Native AppImage)
+- **Ubuntu 18.04+** or equivalent
+- **Python 3.6+** with pip3
+- **wget, curl, file** utilities
+- **ImageMagick** (for icon conversion)
+- **fuse** (for AppImage runtime)
 
-This is the most reliable method that we tested and works 100%:
+#### Cross-Platform (Docker Method)
+- **Docker** installed and running
+- **8GB+ RAM** recommended
+- **5GB+ free disk space**
 
-#### Windows - Complete Step by Step Process
+## 🚀 Build Methods Overview
 
-1. **Clean Installation Environment**
-   ```powershell
-   # First, uninstall any problematic packages that cause conflicts
-   pip uninstall -y ray gpustack anthropic chromadb torch tensorflow tensorflow-io-gcs-filesystem numpy pandas scipy matplotlib matplotlib-inline ipython ipython-pygments-lexers bitarray
-   ```
+| Method | Platform | Output | Difficulty | Speed |
+|--------|----------|--------|------------|-------|
+| **Windows Native** | Windows | `.exe` | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Linux Native** | Linux | `.AppImage` | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Docker Cross-Build** | Any | `.AppImage` | ⭐⭐ | ⭐⭐⭐ |
 
-2. **Install Required Dependencies**
-   ```powershell
-   pip install deep-translator googletrans==3.1.0a0 requests chardet pyinstaller pillow
-   ```
+---
 
-3. **Convert Icon from WebP to ICO (REQUIRED for proper icon display)**
-   ```powershell
-   # This converts icono.webp to endless_sky_translator.ico
-   python convert_icon.py
-   ```
-   **Note**: The icon conversion is ESSENTIAL. Without it, the executable won't have the proper icon.
+## 💻 Method 1: Windows Native Build (.exe)
 
-4. **Clean Previous Builds**
-   ```powershell
-   if (Test-Path "build") { Remove-Item -Path "build" -Recurse -Force }
-   if (Test-Path "dist") { Remove-Item -Path "dist" -Recurse -Force }
-   if (Test-Path "__pycache__") { Remove-Item -Path "__pycache__" -Recurse -Force }
-   ```
+### Step-by-Step Process
 
-5. **Compile with PyInstaller (FINAL WORKING COMMAND)**
-   ```powershell
-   pyinstaller --onefile --windowed --name "Endless_Sky_Translator" --add-data "translator.py;." --add-data "translations.py;." --add-data "translator_gui.py;." --hidden-import "tkinter" --hidden-import "tkinter.ttk" --hidden-import "tkinter.filedialog" --hidden-import "tkinter.messagebox" --hidden-import "tkinter.scrolledtext" --hidden-import "googletrans" --hidden-import "deep_translator" --hidden-import "requests" --hidden-import "chardet" --icon="endless_sky_translator.ico" run_gui.py
-   ```
-   **IMPORTANT**: This exact command works and creates the executable with the proper icon. Make sure `endless_sky_translator.ico` exists before running.
+#### 1. Clone and Setup
+```powershell
+# Clone the repository
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
 
-6. **Find Your Executable**
-   The compiled executable will be in `dist\Endless_Sky_Translator.exe`
-
-#### Linux (AppImage)
-1. **Make the script executable**:
-   ```bash
-   chmod +x build_appimage_linux.sh
-   ```
-
-2. **Run the build script**:
-   ```bash
-   ./build_appimage_linux.sh
-   ```
-
-3. **Find your AppImage** in the current directory:
-   ```bash
-   ls -la *.AppImage
-   ```
-
-4. **Run the AppImage**:
-   ```bash
-   chmod +x Endless_Sky_Translator-x86_64.AppImage
-   ./Endless_Sky_Translator-x86_64.AppImage
-   ```
-
-**Note**: The AppImage build requires:
-- Linux operating system
-- Python 3.6+
-- pip3
-- appimagetool (will be downloaded automatically if not present)
-- ImageMagick (optional, for icon conversion)
-
-### Method 2: Using Spec File (Advanced)
-
-If you prefer using a .spec file for more control:
-
-1. **Use the provided clean spec file**
-   ```powershell
-   pyinstaller endless_sky_translator_clean.spec
-   ```
-
-### Method 3: Automatic Build (Legacy)
-
-#### Windows
-1. **Double click** on `Build_Executable.bat`
-2. **Wait** for the process to complete
-3. **Look for** the `.exe` file in the `dist/` folder
-
-#### Linux
-```bash
-chmod +x build_appimage.sh
-./build_appimage.sh
+# OR download and extract ZIP if you don't have git
 ```
 
-### Method 4: Advanced Builder (Legacy)
+#### 2. Clean Environment (IMPORTANT)
+```powershell
+# Remove problematic packages that cause conflicts
+pip uninstall -y ray gpustack anthropic chromadb torch tensorflow numpy pandas scipy matplotlib
+```
 
+#### 3. Install Dependencies
+```powershell
+# Install required packages
+pip install deep-translator googletrans==3.1.0a0 requests chardet pyinstaller pillow
+```
+
+#### 4. Convert Icon (REQUIRED)
+```powershell
+# Convert WebP icon to ICO format
+python convert_icon.py
+```
+**⚠️ Critical**: Without this step, the executable won't have the proper icon.
+
+#### 5. Clean Previous Builds
+```powershell
+# Remove previous build artifacts
+if (Test-Path "build") { Remove-Item -Path "build" -Recurse -Force }
+if (Test-Path "dist") { Remove-Item -Path "dist" -Recurse -Force }
+if (Test-Path "__pycache__") { Remove-Item -Path "__pycache__" -Recurse -Force }
+```
+
+#### 6. Compile Executable
+```powershell
+# TESTED AND WORKING COMMAND
+pyinstaller --onefile --windowed --name "Endless_Sky_Translator" --add-data "translator.py;." --add-data "translations.py;." --add-data "translator_gui.py;." --hidden-import "tkinter" --hidden-import "tkinter.ttk" --hidden-import "tkinter.filedialog" --hidden-import "tkinter.messagebox" --hidden-import "tkinter.scrolledtext" --hidden-import "googletrans" --hidden-import "deep_translator" --hidden-import "requests" --hidden-import "chardet" --icon="endless_sky_translator.ico" run_gui.py
+```
+
+#### 7. Locate Your Executable
+```powershell
+# Your .exe file will be here:
+ls dist\Endless_Sky_Translator.exe
+```
+
+**🎉 Success!** You now have `dist\Endless_Sky_Translator.exe` ready to distribute.
+
+---
+
+## 🐧 Method 2: Linux Native Build (.AppImage)
+
+### Step-by-Step Process
+
+#### 1. System Preparation (Ubuntu/Debian)
 ```bash
+# Update system
+sudo apt update
+
 # Install dependencies
-pip install -r requirements.txt
+sudo apt install -y python3 python3-pip python3-tk python3-dev wget curl file desktop-file-utils fuse imagemagick git
 
-# Run advanced builder
-python build_advanced.py
+# For CentOS/RHEL/Fedora:
+# sudo dnf install -y python3 python3-pip python3-tkinter python3-devel wget curl file desktop-file-utils fuse ImageMagick git
 ```
 
-#### Advanced Builder Options:
-1. **Build executable** - Only create the .exe/.AppImage
-2. **Build and package** - Create executable + complete distribution package
-3. **Configuration only** - Create configuration files
-4. **Show configuration** - Display current configuration
-
+#### 2. Clone Repository
 ```bash
-# Install PyInstaller
-pip install pyinstaller
+# Clone the project
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
 
-# Basic build
-pyinstaller --onefile --windowed --name "Endless_Sky_Translator" run_gui.py
-
-# Advanced build with configuration
-python build_exe.py
+# Make scripts executable
+chmod +x build_appimage_linux.sh
 ```
 
-## 📁 Generated Files
-
-### Structure after compilation:
-```
-traductor_automatico/
-├── dist/                               # 📁 Final executables
-│   └── Endless_Sky_Translator.exe      # 🎯 Main executable
-├── build/                              # 📁 Temporary files
-├── Endless_Sky_Translator.spec         # ⚙️ PyInstaller configuration
-├── icon.ico                            # 🎨 Application icon
-└── Install_Endless_Sky_Translator.bat  # 📦 Automatic installer
+#### 3. Install Python Dependencies
+```bash
+# Install required Python packages
+pip3 install --user deep-translator googletrans==3.1.0a0 requests chardet pyinstaller pillow
 ```
 
-### For distribution:
-- **`dist/Endless_Sky_Translator.exe`** - Main executable
-- **`README.md`** - Usage documentation
-- **`Install_*.bat`** - Automatic installer (Windows only)
+#### 4. Install AppImage Tools
+```bash
+# Download and install appimagetool
+wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+chmod +x appimagetool-x86_64.AppImage
+sudo mv appimagetool-x86_64.AppImage /usr/local/bin/appimagetool
 
-## ⚙️ Advanced Configuration
-
-### `build_config.json` File
-
-You can customize the build by editing this file:
-
-```json
-{
-  "app": {
-    "name": "Endless Sky Translator",
-    "version": "1.0.0",
-    "main_script": "run_gui.py"
-  },
-  "build": {
-    "output_dir": "dist",
-    "one_file": true,
-    "windowed": true,
-    "console": false
-  },
-  "hidden_imports": [
-    "tkinter",
-    "googletrans",
-    "requests"
-  ]
-}
+# Verify installation
+appimagetool --version
 ```
 
-### Icon Customization
+#### 5. Run Build Script
+```bash
+# Execute the build script
+./build_appimage_linux.sh
+```
 
-1. **Automatic**: The script creates a basic icon
-2. **Manual**: Place your `icon.ico` file in the directory
-3. **No icon**: Remove the reference in the configuration
+#### 6. Test Your AppImage
+```bash
+# Your AppImage will be in dist/ folder
+ls -la dist/Endless_Sky_Translator-x86_64.AppImage
 
-## 🎯 Expected File Sizes
+# Make it executable and test
+chmod +x dist/Endless_Sky_Translator-x86_64.AppImage
+./dist/Endless_Sky_Translator-x86_64.AppImage
+```
 
-| Platform | Typical Size | Content |
-|----------|-------------|---------|
-| Windows .exe | 25-40 MB | Python + dependencies + application |
-| Linux AppImage | 30-50 MB | Python + dependencies + application |
+**🎉 Success!** You now have a portable AppImage that runs on most Linux distributions.
+
+---
+
+## 🐳 Method 3: Docker Cross-Build (Any Platform → AppImage)
+
+This method allows you to build Linux AppImages from Windows, macOS, or Linux using Docker.
+
+### Step-by-Step Process
+
+#### 1. Install Docker
+- **Windows/macOS**: Download Docker Desktop from [docker.com](https://www.docker.com/products/docker-desktop)
+- **Linux**: Follow your distribution's Docker installation guide
+
+#### 2. Clone Repository
+```bash
+# Windows (PowerShell)
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
+
+# Linux/macOS (Terminal)
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
+```
+
+#### 3. Build with Docker
+```bash
+# For Windows (PowerShell):
+cd "d:\Program Files (x86)\Steam\steamapps\common\Endless Sky\traductor_automatico"
+docker build -t endless-sky-translator-appimage -f ./Dockerfile.appimage .
+
+# For Linux/macOS (Terminal):
+docker build -t endless-sky-translator-appimage -f ./Dockerfile.appimage .
+```
+
+#### 4. Extract the AppImage
+```bash
+# Create a temporary container and copy the AppImage
+docker create --name temp-container endless-sky-translator-appimage
+docker cp temp-container:/app/dist/Endless_Sky_Translator-x86_64.AppImage ./dist/
+docker rm temp-container
+
+# Verify the AppImage was copied
+ls -la dist/Endless_Sky_Translator-x86_64.AppImage
+```
+
+#### 5. Test on Linux
+```bash
+# On a Linux system, make it executable and run
+chmod +x dist/Endless_Sky_Translator-x86_64.AppImage
+./dist/Endless_Sky_Translator-x86_64.AppImage
+```
+
+**🎉 Success!** You've cross-compiled a Linux AppImage from any platform.
+
+---
+
+## 🗂️ Output Structure
+
+After successful build, your directory will look like:
+
+```
+endless-sky-translator/
+├── dist/                                   # 📁 Final executables
+│   ├── Endless_Sky_Translator.exe          # 🎯 Windows executable
+│   └── Endless_Sky_Translator-x86_64.AppImage  # 🐧 Linux AppImage
+├── build/                                  # 📁 Temporary build files
+├── endless_sky_translator.ico              # 🎨 Application icon
+├── Endless_Sky_Translator.spec             # ⚙️ PyInstaller spec file
+├── build_appimage_linux.sh                # 📜 Linux build script
+├── Dockerfile.appimage                     # 🐳 Docker build config
+└── ... (source files)
+```
+
+---
+
+## 📊 File Sizes and Performance
+
+| Platform | File Size | Startup Time | RAM Usage |
+|----------|-----------|--------------|-----------|
+| Windows .exe | ~25-35 MB | 2-4 seconds | ~50-80 MB |
+| Linux AppImage | ~12-20 MB | 1-3 seconds | ~40-70 MB |
+
+---
 
 ## 🛠️ Troubleshooting
 
-### Error: "ModuleNotFoundError"
+### Common Issues and Solutions
+
+#### ❌ "Python not found"
+**Windows**:
+```powershell
+# Reinstall Python with PATH option checked
+# Download from: https://www.python.org/downloads/
+```
+
+**Linux**:
 ```bash
-# Solution: Install dependencies
+sudo apt install python3 python3-pip  # Ubuntu/Debian
+sudo dnf install python3 python3-pip  # Fedora/CentOS
+```
+
+#### ❌ "PyInstaller not found"
+```bash
+pip install pyinstaller --upgrade
+# or
+pip3 install pyinstaller --upgrade
+```
+
+#### ❌ "ModuleNotFoundError: No module named 'X'"
+```bash
+# Install missing dependencies
 pip install -r requirements.txt
+
+# For specific modules:
+pip install deep-translator googletrans requests chardet pillow
 ```
 
-### Error: "PyInstaller not found"
+#### ❌ "Docker build failed"
 ```bash
-# Solution: Install PyInstaller
-pip install pyinstaller
+# Make sure Docker is running
+docker --version
+
+# On Windows, restart Docker Desktop
+# On Linux, start Docker service:
+sudo systemctl start docker
 ```
 
-### Error: "Python not found"
-- **Windows**: Reinstall Python from python.org, check "Add to PATH"
-- **Linux**: `sudo apt install python3 python3-pip`
-
-### Error: "Executable too large"
+#### ❌ "AppImage won't run on Linux"
 ```bash
-# Use UPX to compress (optional)
-pip install upx-python
-# The script uses it automatically if available
+# Install FUSE if missing
+sudo apt install fuse  # Ubuntu/Debian
+sudo dnf install fuse  # Fedora/CentOS
+
+# Make AppImage executable
+chmod +x Endless_Sky_Translator-x86_64.AppImage
+
+# Try running with --appimage-extract-and-run
+./Endless_Sky_Translator-x86_64.AppImage --appimage-extract-and-run
 ```
 
-### Error: "Missing module in executable"
-Edit `build_config.json` and add the module to `hidden_imports`:
-```json
-"hidden_imports": [
-  "tkinter",
-  "googletrans",
-  "your_missing_module"
-]
+#### ❌ "Icon not showing in executable"
+```bash
+# Make sure icon conversion was successful
+python convert_icon.py
+ls endless_sky_translator.ico  # Should exist
+
+# Then rebuild executable
 ```
 
-## 📊 Method Comparison
+#### ❌ "Executable is too large"
+The executables are optimized but include the Python runtime. This is normal for PyInstaller builds.
 
-| Method | Ease | Control | Speed | Recommended for |
-|--------|------|---------|-------|-----------------|
-| `.bat` automatic | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | End users |
-| Advanced builder | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Developers |
-| PyInstaller manual | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | Experts |
+#### ❌ "Antivirus flags executable as suspicious"
+This is common with PyInstaller executables. The executable is safe - you can:
+1. Add an exclusion in your antivirus
+2. Upload to VirusTotal.com to verify safety
+3. Build from source code yourself
 
-## 🎮 Executable Distribution
+---
 
-### For end users:
-1. **Copy** the `.exe` file from the `dist/` folder
-2. **No need** for Python to be installed on target machine
-3. **Run** directly with double click
-4. **Include** the README.md for instructions
+## 🎯 Advanced Build Options
 
-### For developers:
-1. **Complete package** with `build_advanced.py` option 2
-2. **Includes** source code, documentation and installer
-3. **Facilitates** future modifications
+### Custom Icon
+Replace `icono.webp` with your own image and run:
+```bash
+python convert_icon.py
+```
 
-## 🔒 Security and Antivirus
+### Debugging Mode
+Add `--debug=all` to PyInstaller command for verbose output:
+```bash
+pyinstaller --debug=all --onefile ... (rest of command)
+```
 
-### Common false positives:
-- **Some antivirus** may flag PyInstaller executables as suspicious
-- **This is normal** for Python-packaged applications
-- **Solution**: Add exclusion in antivirus or distribute source code
+### Console Version
+Remove `--windowed` flag to keep console window visible:
+```bash
+pyinstaller --onefile --name "Endless_Sky_Translator_Console" ... (rest of command)
+```
 
-### To avoid issues:
-1. **Test** on clean machine to verify
-2. **Use** services like VirusTotal to verify
-3. **Document** clearly that it's a game translator
+### Multiple Files (Instead of Single Executable)
+Remove `--onefile` flag to create a directory with multiple files:
+```bash
+pyinstaller --windowed --name "Endless_Sky_Translator" ... (rest of command)
+```
 
-## 🌐 Cross-Platform Support
+---
 
-### Windows
-- ✅ **Fully supported**
-- ✅ **Executable .exe**
-- ✅ **Automatic installer**
+## 🚀 Quick Start Summary
 
-### Linux  
-- ✅ **Supported with AppImage**
-- ✅ **Portable without installation**
-- ⚠️ **Requires additional tools**
+### For Windows Users:
+```powershell
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
+pip install deep-translator googletrans==3.1.0a0 requests chardet pyinstaller pillow
+python convert_icon.py
+pyinstaller --onefile --windowed --name "Endless_Sky_Translator" --add-data "translator.py;." --add-data "translations.py;." --add-data "translator_gui.py;." --hidden-import "tkinter" --hidden-import "tkinter.ttk" --hidden-import "tkinter.filedialog" --hidden-import "tkinter.messagebox" --hidden-import "tkinter.scrolledtext" --hidden-import "googletrans" --hidden-import "deep_translator" --hidden-import "requests" --hidden-import "chardet" --icon="endless_sky_translator.ico" run_gui.py
+```
 
-### macOS
-- ⚠️ **Experimental**
-- ⚠️ **Requires manual modifications**
-- 📝 **Not included in automatic scripts**
+### For Linux Users:
+```bash
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
+chmod +x build_appimage_linux.sh
+./build_appimage_linux.sh
+```
+
+### For Docker Users (Any Platform):
+```bash
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
+docker build -t endless-sky-translator-appimage -f ./Dockerfile.appimage .
+docker create --name temp-container endless-sky-translator-appimage
+docker cp temp-container:/app/dist/Endless_Sky_Translator-x86_64.AppImage ./dist/
+docker rm temp-container
+```
+
+---
 
 ## 📞 Support
 
-If you have compilation problems:
+If you encounter issues:
 
-1. **Verify** that all files are present
-2. **Run** `python run_gui.py` directly first
-3. **Check** that dependencies are installed
-4. **Use** the automatic `.bat` method if in doubt
+1. **Check Prerequisites**: Ensure all required software is installed
+2. **Try Clean Build**: Remove `build/`, `dist/`, and `__pycache__/` directories
+3. **Verify Dependencies**: Run `python run_gui.py` directly first
+4. **Check GitHub Issues**: Visit the repository's issues page
+5. **Create New Issue**: Include error messages and system information
 
-## 📝 Technical Notes
+**Repository**: [https://github.com/kroryan/endless-sky-translator](https://github.com/kroryan/endless-sky-translator)
 
-### PyInstaller
-- **Packages** Python + dependencies in a single file
-- **Automatically detects** most dependencies
-- **Creates** native executables for each platform
+---
 
-### Included optimizations:
-- ✅ **UPX compression** to reduce size
-- ✅ **Exclusion** of unnecessary modules
-- ✅ **Inclusion** of necessary data files
-- ✅ **Custom** icons
+## 🔒 Security Notes
 
-Ready to create your executable! 🚀
+- Executables are built from open source code
+- No malicious code or data collection
+- Antivirus false positives are common with PyInstaller
+- All translations are done via Google Translate API
+- No personal data is transmitted
+
+Ready to build your executable! Choose your preferred method and follow the guide. 🚀

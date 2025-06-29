@@ -24,35 +24,44 @@ A comprehensive translation tool for **Endless Sky** game files with an intuitiv
 ### Option 2: Build from Source
 
 #### Prerequisites
-- Python 3.6 or higher
-- pip package manager
+- **Python 3.6+** and pip
+- **Git** (for cloning)
+- **Docker** (optional, for cross-compilation)
 
-#### Quick Build
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/kroryan/endless-sky-translator.git
-   cd endless-sky-translator
-   ```
+#### 🖥️ Windows Build (.exe)
+```bash
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
+pip install deep-translator googletrans==3.1.0a0 requests chardet pyinstaller pillow
+python convert_icon.py
+pyinstaller --onefile --windowed --name "Endless_Sky_Translator" --add-data "translator.py;." --add-data "translations.py;." --add-data "translator_gui.py;." --hidden-import "tkinter" --hidden-import "tkinter.ttk" --hidden-import "tkinter.filedialog" --hidden-import "tkinter.messagebox" --hidden-import "tkinter.scrolledtext" --hidden-import "googletrans" --hidden-import "deep_translator" --hidden-import "requests" --hidden-import "chardet" --icon="endless_sky_translator.ico" run_gui.py
+```
 
-2. **Install dependencies**:
-   ```bash
-   pip install deep-translator googletrans==3.1.0a0 requests chardet pyinstaller pillow
-   ```
+#### 🐧 Linux Build (.AppImage)
+```bash
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
+chmod +x build_appimage_linux.sh
+./build_appimage_linux.sh
+```
 
-3. **Convert icon** (if needed):
-   ```bash
-   python convert_icon.py
-   ```
+#### 🐳 Cross-Platform Build (Docker)
+```bash
+git clone https://github.com/kroryan/endless-sky-translator.git
+cd endless-sky-translator
+docker build -t endless-sky-translator-appimage -f ./Dockerfile.appimage .
+docker create --name temp-container endless-sky-translator-appimage
+docker cp temp-container:/app/dist/Endless_Sky_Translator-x86_64.AppImage ./dist/
+docker rm temp-container
+```
 
-4. **Build executable**:
-   ```bash
-   pyinstaller --onefile --windowed --name "Endless_Sky_Translator" --add-data "translator.py;." --add-data "translations.py;." --add-data "translator_gui.py;." --hidden-import "tkinter" --hidden-import "tkinter.ttk" --hidden-import "tkinter.filedialog" --hidden-import "tkinter.messagebox" --hidden-import "tkinter.scrolledtext" --hidden-import "googletrans" --hidden-import "deep_translator" --hidden-import "requests" --hidden-import "chardet" --icon="endless_sky_translator.ico" run_gui.py
-   ```
-
-5. **Find your executable** in the `dist/` folder
-
-#### Detailed Build Instructions
-For detailed build instructions, troubleshooting, and advanced options, see [BUILD_GUIDE.md](BUILD_GUIDE.md).
+### 📚 Detailed Build Guide
+For complete build instructions, troubleshooting, and advanced options, see **[BUILD_GUIDE.md](BUILD_GUIDE.md)**:
+- **🖥️ Windows native build** step-by-step
+- **🐧 Linux native build** with all dependencies  
+- **🐳 Docker cross-compilation** from any platform
+- **🛠️ Troubleshooting guide** for common issues
+- **⚙️ Advanced build options** and customization
 
 ## 🎮 How to Use
 

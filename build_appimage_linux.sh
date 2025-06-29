@@ -96,7 +96,7 @@ Name=Endless Sky Translator
 Comment=Translation tool for Endless Sky game files
 Exec=Endless_Sky_Translator
 Icon=endless-sky-translator
-Categories=Utility;Game;
+Categories=Utility;
 Terminal=false
 EOF
     
@@ -108,6 +108,20 @@ EOF
         else
             echo "⚠️ ImageMagick not found, skipping icon conversion"
         fi
+    elif [ -f "icono.webp" ]; then
+        # Try to convert webp to PNG for AppImage
+        if command -v convert &> /dev/null; then
+            convert "icono.webp" "$APPDIR/usr/share/icons/hicolor/256x256/apps/endless-sky-translator.png"
+            echo "✅ Icon converted from webp to PNG"
+        else
+            echo "⚠️ ImageMagick not found, cannot convert webp icon"
+        fi
+    elif [ -f "icono.png" ]; then
+        # Use PNG directly
+        cp "icono.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/endless-sky-translator.png"
+        echo "✅ PNG icon copied"
+    else
+        echo "⚠️ No icon found, AppImage will use default icon"
     fi
     
     # Create AppRun script
@@ -133,10 +147,14 @@ EOF
     if [ $? -eq 0 ]; then
         echo "🎉 AppImage created successfully!"
         echo "📁 AppImage location: Endless_Sky_Translator-x86_64.AppImage"
+        # === NUEVO: Copiar AppImage a dist/ ===
+        mkdir -p dist
+        cp "Endless_Sky_Translator-x86_64.AppImage" dist/
+        echo "📦 AppImage copiado a dist/"
         echo ""
         echo "🚀 To run the AppImage:"
-        echo "   chmod +x Endless_Sky_Translator-x86_64.AppImage"
-        echo "   ./Endless_Sky_Translator-x86_64.AppImage"
+        echo "   chmod +x dist/Endless_Sky_Translator-x86_64.AppImage"
+        echo "   ./dist/Endless_Sky_Translator-x86_64.AppImage"
     else
         echo "❌ AppImage creation failed!"
         exit 1
