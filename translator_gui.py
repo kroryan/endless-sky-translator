@@ -311,32 +311,57 @@ class TranslatorGUIImproved:
         # Lista específica de archivos que NUNCA deben aparecer
         excluded_files = [
             'fleets.txt', 'governments.txt', 'systems.txt', 'planets.txt',
-            'map systems.txt', 'commodities.txt', 'variants.txt', 'persons.txt',
+            'map systems.txt', 'commodities.txt', 'persons.txt',
             'effects.txt', 'hazards.txt', 'formations.txt', 'stars.txt', 'series.txt',
-            'derelicts.txt', 'minables.txt', 'start.txt', 'wormhole.txt'
+            'derelicts.txt', 'minables.txt', 'start.txt', 'wormhole.txt', 'starts.txt',
+            'globals.txt', 'gamerules.txt', 'harvesting.txt', 'categories.txt',
+            'map beyond patir.txt'
         ]
         
         if filename in excluded_files:
             return False
         
-        # Patrones que NUNCA deben aparecer
-        excluded_patterns = ['derelict', 'variant', 'formation', 'hazard', 'fleet', 'government', 'system']
+        # Patrones que NUNCA deben aparecer (pero no 'variant' porque algunos archivos variant son útiles)
+        excluded_patterns = ['derelict', 'formation', 'hazard', 'fleet', 'government', 'system', 'rating', 'swizzle']
         if any(pattern in filename for pattern in excluded_patterns):
-            return False
+            # Excepción: si contiene ship, outfit, weapon, engine sí queremos incluirlo
+            equipment_exceptions = ['ship', 'outfit', 'weapon', 'engine', 'power']
+            if not any(eq in filename for eq in equipment_exceptions):
+                return False
         
-        # Archivos que SÍ queremos mostrar
-        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign']
+        # Archivos que SÍ queremos mostrar (contenido seguro)
+        safe_patterns = ['mission', 'conversation', 'dialog', 'hail', 'job', 'news', 'event', 'campaign', 'culture', 'intro', 'side']
         if any(pattern in filename for pattern in safe_patterns):
             return True
         
-        # Archivos especiales que SÍ queremos (solo con lógica especial)
-        special_files = ['ships.txt', 'outfits.txt', 'engines.txt', 'weapons.txt', 'power.txt']
-        if filename in special_files:
+        # Archivos de equipamiento que SÍ queremos (contienen descripciones traducibles)
+        equipment_patterns = ['ship', 'outfit', 'weapon', 'engine', 'power']
+        if any(pattern in filename for pattern in equipment_patterns):
             return True
         
         # Archivos raíz permitidos
         root_files = ['map planets.txt', 'dialog phrases.txt']
         if filename in root_files:
+            return True
+        
+        # Archivos UI permitidos
+        ui_patterns = ['interface', 'tooltip', 'help', 'landing', 'flight']
+        if any(pattern in filename for pattern in ui_patterns):
+            return True
+        
+        # Archivos específicos de facciones que también queremos
+        faction_patterns = ['sales', 'boarding', 'marauder', 'kestrel', 'name', 'critter', 'elenchus', 'nanobots', 'windjammer', 'indigenous', 'archaeology', 'tace mesa']
+        if any(pattern in filename for pattern in faction_patterns):
+            return True
+        
+        # Archivos que terminan en números seguidos de palabras (ej: "hai reveal 1 intro.txt")
+        import re
+        if re.search(r'\d+\s+\w+\.txt$', filename):
+            return True
+        
+        # Archivos con nombres de facciones específicas
+        faction_names = ['hai', 'korath', 'wanderer', 'remnant', 'pug', 'quarg', 'coalition', 'avgi', 'bunrodea', 'drak', 'gegno', 'iije', 'incipias', 'kahet', 'rulei', 'sheragi', 'successor', 'vyrmeid', 'aberrant', 'unfettered', 'heliarch', 'lunarium']
+        if any(faction in filename for faction in faction_names):
             return True
         
         # Si llegamos aquí, probablemente no es seguro mostrar el archivo
