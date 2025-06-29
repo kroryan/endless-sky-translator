@@ -298,7 +298,45 @@ After running the translator:
 2. **Go to Preferences → Plugins**
 3. **Enable "Traducción al Español"** (or your target language)
 4. **Restart the game**
-5. **Enjoy the translated content!**
+
+### ⚠️ IMPORTANT: Plugin Behavior
+
+**The generated plugin does not work perfectly as a traditional plugin.** When you enable the plugin, you will see BOTH languages:
+- **Original English text** (from the base game)
+- **Translated text** (from the plugin)
+
+This means you'll see text in both English and your target language simultaneously.
+
+### 🔧 For Complete Translation (Recommended)
+
+To see **ONLY** the translated text and have a complete translation experience:
+
+1. **First, backup your original files**: Make a copy of your `Endless Sky/data/` folder
+2. **Replace the original files**: Copy the translated files from the plugin to replace the original game files
+3. **Path locations**:
+   - **Plugin files**: `Endless Sky/plugins/Traducción al Español/data/`
+   - **Game files**: `Endless Sky/data/`
+
+**Example replacement process:**
+```
+# Backup (do this first!)
+Copy: Endless Sky/data/ → Endless Sky/data_backup/
+
+# Replace with translated files
+Copy: Endless Sky/plugins/Traducción al Español/data/ → Endless Sky/data/
+```
+
+### 🎯 What this achieves:
+- ✅ **Complete translation** without duplicate text
+- ✅ **Clean interface** with only your target language
+- ✅ **Full game experience** in your preferred language
+- ✅ **No mixed languages** in dialogs and descriptions
+
+### 🔄 To restore original English:
+Simply restore your backup:
+```
+Copy: Endless Sky/data_backup/ → Endless Sky/data/
+```
 
 The translation appears as a plugin, so you can easily:
 - **Enable/disable** it without affecting the base game
