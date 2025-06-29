@@ -57,6 +57,35 @@ This is the most reliable method that we tested and works 100%:
 6. **Find Your Executable**
    The compiled executable will be in `dist\Endless_Sky_Translator.exe`
 
+#### Linux (AppImage)
+1. **Make the script executable**:
+   ```bash
+   chmod +x build_appimage_linux.sh
+   ```
+
+2. **Run the build script**:
+   ```bash
+   ./build_appimage_linux.sh
+   ```
+
+3. **Find your AppImage** in the current directory:
+   ```bash
+   ls -la *.AppImage
+   ```
+
+4. **Run the AppImage**:
+   ```bash
+   chmod +x Endless_Sky_Translator-x86_64.AppImage
+   ./Endless_Sky_Translator-x86_64.AppImage
+   ```
+
+**Note**: The AppImage build requires:
+- Linux operating system
+- Python 3.6+
+- pip3
+- appimagetool (will be downloaded automatically if not present)
+- ImageMagick (optional, for icon conversion)
+
 ### Method 2: Using Spec File (Advanced)
 
 If you prefer using a .spec file for more control:
