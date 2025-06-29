@@ -1,0 +1,21 @@
+# Core dependencies for the Endless Sky Translator
+deep-translator==1.11.4
+googletrans==3.1.0a0
+requests>=2.25.0
+chardet==3.0.4
+
+# GUI dependencies (usually included with Python)
+# tkinter - included with most Python installations
+
+# Build dependencies for creating executables
+pyinstaller>=5.13.0
+setuptools>=60.0.0
+wheel>=0.37.0
+
+# Optional dependencies for enhanced building
+# upx-python>=4.0.0  # Commented out - not available for Python 3.11
+pillow>=8.0.0      # For icon handling
+
+# Development dependencies (optional)
+# pytest>=6.0.0      # For testing
+# flake8>=4.0.0      # For code linting
